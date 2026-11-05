@@ -1,7 +1,7 @@
 # Agile Progress Tracker (PROGRESS_TRACKER.md) — NutriSnap
 
-> **Current Active Sprint:** Sprint 1 — Auth, Personalization Onboarding & BYOK Vault (Sprint 0 Completed)  
-> **Overall Project Completion:** `16 / 98 Story Points (16.3%)`  
+> **Current Active Sprint:** Sprint 1 — Auth, Personalization Onboarding & BYOK Vault  
+> **Overall Project Completion:** `21 / 98 Story Points (21.4%)`  
 > **Last Updated:** 2026-11-06
 
 ---
@@ -11,12 +11,12 @@
 | Sprint | Nama Sprint | Story Points (Done / Total) | Progress | Status |
 | :--- | :--- | :---: | :---: | :---: |
 | **Sprint 0** | Foundation, Agile Docs, Monorepo & Database | `16 / 16 SP` | `100.0%` | 🟢 `DONE` |
-| **Sprint 1** | Auth, Personalization Onboarding & BYOK Vault | `0 / 21 SP` | `0.0%` | ⚪ `TODO` |
+| **Sprint 1** | Auth, Personalization Onboarding & BYOK Vault | `5 / 21 SP` | `23.8%` | 🟡 `IN_PROGRESS` |
 | **Sprint 2** | Dual Nutrition Logging (AI Vision + Manual Gram) | `0 / 24 SP` | `0.0%` | ⚪ `TODO` |
 | **Sprint 3** | Interactive Dashboard, Responsive Nav & Analytics | `0 / 18 SP` | `0.0%` | ⚪ `TODO` |
 | **Sprint 4** | AI Bulking & Diet Assistant Chatbot | `0 / 13 SP` | `0.0%` | ⚪ `TODO` |
 | **Sprint 5** | PWA, Scheduled Meal Push Notifications & Coolify | `0 / 16 SP` | `0.0%` | ⚪ `TODO` |
-| **TOTAL** | **Seluruh Proyek NutriSnap** | **`16 / 98 SP`** | **`16.3%`** | 🟡 **`ACTIVE`** |
+| **TOTAL** | **Seluruh Proyek NutriSnap** | **`21 / 98 SP`** | **`21.4%`** | 🟡 **`ACTIVE`** |
 
 ---
 
@@ -30,8 +30,8 @@
 - [x] **`NS-005`** (3 SP) — Setup `apps/frontend` (Next.js App Router, Tailwind CSS, Shadcn UI, Design System Tokens Light/Dark, Responsive Bottom Nav `<768px` & Sidebar `>=768px`) — **DONE**
 
 ### Sprint 1: Authentication, Onboarding Engine & BYOK Security Vault
-- [ ] **`NS-101`** (5 SP) — Implementasi Modul Enkripsi `AES-256-GCM` (`encryptApiKey`, `decryptApiKey`) beserta Unit Test keamanan — **TODO**
-- [ ] **`NS-102`** (5 SP) — Implementasi Google OAuth 2.0 Authentication & Session Management (`auth` module + middleware) — **TODO**
+- [x] **`NS-101`** (5 SP) — Implementasi Modul Enkripsi `AES-256-GCM` (`encryptApiKey`, `decryptApiKey`) beserta Unit Test keamanan — **DONE**
+- [/] **`NS-102`** (5 SP) — Implementasi Google OAuth 2.0 Authentication & Session Management (`auth` module + middleware) — **IN_PROGRESS**
 - [ ] **`NS-103`** (5 SP) — Endpoint & UI manajemen BYOK Gemini API Key (`/api/v1/apikey` + live validation ke Google Gemini API) — **TODO**
 - [ ] **`NS-104`** (6 SP) — Endpoint & Multi-step UI Wizard `/onboarding` (Input Nama, Usia, Tinggi, Berat, Gender, Target Berat, Target Bulan/Tahun -> Kalkulasi BMI, TDEE, Kalori & Protein) — **TODO**
 
