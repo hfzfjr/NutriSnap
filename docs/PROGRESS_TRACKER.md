@@ -13,10 +13,10 @@
 | **Sprint 0** | Foundation, Agile Docs, Monorepo & Database | `16 / 16 SP` | `100.0%` | 🟢 `DONE` |
 | **Sprint 1** | Auth, Personalization Onboarding & BYOK Vault | `21 / 21 SP` | `100.0%` | 🟢 `DONE` |
 | **Sprint 2** | Dual Nutrition Logging (AI Vision + Manual Gram) | `24 / 24 SP` | `100.0%` | 🟢 `DONE` |
-| **Sprint 3** | Interactive Dashboard, Responsive Nav & Analytics | `0 / 18 SP` | `0.0%` | 🟡 `IN_PROGRESS` |
+| **Sprint 3** | Interactive Dashboard, Responsive Nav & Analytics | `5 / 18 SP` | `27.8%` | 🟡 `IN_PROGRESS` |
 | **Sprint 4** | AI Bulking & Diet Assistant Chatbot | `0 / 13 SP` | `0.0%` | ⚪ `TODO` |
 | **Sprint 5** | PWA, Scheduled Meal Push Notifications & Coolify | `0 / 16 SP` | `0.0%` | ⚪ `TODO` |
-| **TOTAL** | **Seluruh Proyek NutriSnap** | **`61 / 98 SP`** | **`62.2%`** | 🟡 **`ACTIVE`** |
+| **TOTAL** | **Seluruh Proyek NutriSnap** | **`66 / 98 SP`** | **`67.3%`** | 🟡 **`ACTIVE`** |
 
 ---
 
@@ -43,8 +43,8 @@
 - [x] **`NS-205`** (5 SP) — Halaman `/log` Dual Logger UI: Tab 1 (AI Camera Scanner + Editable Confirmation Card) & Tab 2 (Manual Input + Berat Gram) — **DONE**
 
 ### Sprint 3: Interactive Dashboard, Responsive Navigation (`<768px`) & Analytics
-- [ ] **`NS-301`** (5 SP) — Responsive App Shell: Fixed Bottom Navbar pada `< 768px` (dengan tombol tengah Scan/Log) & Sidebar pada `>= 768px` — **TODO**
-- [ ] **`NS-302`** (8 SP) — Halaman `/dashboard`: Calorie Ring, Surplus/Deficit Status Tracker, Macro Progress Bars (Protein/Carbs/Fat), & Daily Meal Timeline — **TODO**
+- [x] **`NS-301`** (5 SP) — Responsive App Shell: Fixed Bottom Navbar pada `< 768px` (dengan tombol tengah Scan/Log) & Sidebar pada `>= 768px` — **DONE**
+- [/] **`NS-302`** (8 SP) — Halaman `/dashboard`: Calorie Ring, Surplus/Deficit Status Tracker, Macro Progress Bars (Protein/Carbs/Fat), & Daily Meal Timeline — **IN_PROGRESS**
 - [ ] **`NS-303`** (5 SP) — Halaman `/analytics`: Pencatatan berat badan berkala (`weight_logs`), BMI Tracker, & grafik kepatuhan kalori mingguan — **TODO**
 
 ### Sprint 4: Contextual AI Bulking & Diet Assistant Chatbot
