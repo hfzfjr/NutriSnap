@@ -53,8 +53,8 @@
 - [x] **`NS-403`** (3 SP) — Penanganan *graceful fallback* & pesan panduan ramah jika BYOK API Key pengguna belum diatur atau mencapai kuota limit — **DONE**
 
 ### Sprint 5: PWA, Scheduled Push Notifications & Coolify Production Readiness
-- [ ] **`NS-501`** (5 SP) — Konfigurasi PWA (`manifest.ts`, ikon multi-ukuran, Apple PWA meta tags, Service Worker `public/sw.js`, & Install Banner) — **TODO**
-- [ ] **`NS-502`** (5 SP) — Modul Web Push VAPID (`/api/v1/notifications/*`) & Cron Scheduler (`meal-reminder.job.ts`) untuk mengecek makan harian yang belum di-log — **TODO**
+- [x] **`NS-501`** (5 SP) — Konfigurasi PWA (`manifest.ts`, ikon multi-ukuran, Apple PWA meta tags, Service Worker `public/sw.js`, & Install Banner) — **DONE**
+- [/] **`NS-502`** (5 SP) — Modul Web Push VAPID (`/api/v1/notifications/*`) & Cron Scheduler (`meal-reminder.job.ts`) untuk mengecek makan harian yang belum di-log — **IN_PROGRESS**
 - [ ] **`NS-503`** (3 SP) — Halaman `/settings` lengkap: Manajemen BYOK API Key, Edit Target Berat/Kalori, Pengaturan Jam Push Notification, & Toggle Light/Dark Mode — **TODO**
 - [ ] **`NS-504`** (3 SP) — Pembuatan `Dockerfile` (`apps/frontend` & `apps/backend`), `docker-compose.coolify.yml`, `.env.example`, dan pengujian build End-to-End — **TODO**
 
