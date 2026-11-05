@@ -1,7 +1,7 @@
 # Agile Progress Tracker (PROGRESS_TRACKER.md) — NutriSnap
 
-> **Current Active Sprint:** Sprint 5 — PWA, Scheduled Meal Push Notifications & Coolify (Sprint 0–4 Completed)  
-> **Overall Project Completion:** `95 / 98 Story Points (96.9%)`  
+> **Current Active Sprint:** Seluruh Sprint Selesai (Sprint 0 – Sprint 5 Completed)  
+> **Overall Project Completion:** `98 / 98 Story Points (100.0%)`  
 > **Last Updated:** 2026-11-06
 
 ---
@@ -15,8 +15,8 @@
 | **Sprint 2** | Dual Nutrition Logging (AI Vision + Manual Gram) | `24 / 24 SP` | `100.0%` | 🟢 `DONE` |
 | **Sprint 3** | Interactive Dashboard, Responsive Nav & Analytics | `18 / 18 SP` | `100.0%` | 🟢 `DONE` |
 | **Sprint 4** | AI Bulking & Diet Assistant Chatbot | `13 / 13 SP` | `100.0%` | 🟢 `DONE` |
-| **Sprint 5** | PWA, Scheduled Meal Push Notifications & Coolify | `13 / 16 SP` | `81.3%` | 🟡 `IN_PROGRESS` |
-| **TOTAL** | **Seluruh Proyek NutriSnap** | **`95 / 98 SP`** | **`96.9%`** | 🟡 **`ACTIVE`** |
+| **Sprint 5** | PWA, Scheduled Meal Push Notifications & Coolify | `16 / 16 SP` | `100.0%` | 🟢 `DONE` |
+| **TOTAL** | **Seluruh Proyek NutriSnap** | **`98 / 98 SP`** | **`100.0%`** | 🟢 **`COMPLETED`** |
 
 ---
 
@@ -56,7 +56,7 @@
 - [x] **`NS-501`** (5 SP) — Konfigurasi PWA (`manifest.ts`, ikon multi-ukuran, Apple PWA meta tags, Service Worker `public/sw.js`, & Install Banner) — **DONE**
 - [x] **`NS-502`** (5 SP) — Modul Web Push VAPID (`/api/v1/notifications/*`) & Cron Scheduler (`meal-reminder.job.ts`) untuk mengecek makan harian yang belum di-log — **DONE**
 - [x] **`NS-503`** (3 SP) — Halaman `/settings` lengkap: Manajemen BYOK API Key, Edit Target Berat/Kalori, Pengaturan Jam Push Notification, & Toggle Light/Dark Mode — **DONE**
-- [/] **`NS-504`** (3 SP) — Pembuatan `Dockerfile` (`apps/frontend` & `apps/backend`), `docker-compose.coolify.yml`, `.env.example`, dan pengujian build End-to-End — **IN_PROGRESS**
+- [x] **`NS-504`** (3 SP) — Pembuatan `Dockerfile` (`apps/frontend` & `apps/backend`), `docker-compose.coolify.yml`, `.env.example`, dan pengujian build End-to-End — **DONE**
 
 ---
 
@@ -66,3 +66,8 @@
 | :--- | :--- | :--- | :--- |
 | `2026-11-06` | `NS-001` | Merampungkan review arsitektur Monorepo Full Coolify serta membuat `AGENTS.md` (di root) dan suite dokumentasi Agile (`PRD.md`, `DESIGN.md`, `ARCHITECTURE.md`, `API_CONTRACT.md`, `SPRINT.md`, `PROGRESS_TRACKER.md`) di dalam `/docs`. | Principal Architect Agent |
 | `2026-11-06` | `NS-002`, `NS-003`, `NS-004`, `NS-005` | Menyelesaikan seluruh **Sprint 0**: Inisialisasi `pnpm` workspace monorepo, implementasi `@nutrisnap/shared` (BMI, BMR Mifflin-St Jeor, TDEE, Surplus/Deficit Engine, Zod Schemas + 6 Unit Tests), setup `@nutrisnap/backend` (Fastify + Drizzle PostgreSQL Schema 9 tabel + Katalog 25 Makanan Lokal Indonesia + 2 Integration Tests), serta setup `@nutrisnap/frontend` (Next.js 15 App Router, Shadcn Design System Light/Dark, Responsive Bottom Nav `<768px` & Desktop Sidebar `>=768px`, PWA Manifest). Seluruh `pnpm test`, `pnpm typecheck`, dan `pnpm build` lulus 100%. | Principal Architect Agent |
+| `2026-11-06` | `NS-101`, `NS-102`, `NS-103`, `NS-104` | Menyelesaikan seluruh **Sprint 1** pada branch `feat/sprint-1` dan merge ke `main`: Implementasi BYOK Vault `AES-256-GCM` (`vault.ts`), Google OAuth 2.0 + HMAC Session/Bearer Auth (`auth.routes.ts`), manajemen BYOK Gemini API Key (`/api/v1/apikey`), serta 4-step Onboarding Wizard (`/onboarding`) dengan perhitungan otomatis BMI, BMR, TDEE, Surplus/Deficit, dan Macro Split. | Principal Architect Agent |
+| `2026-11-06` | `NS-201` – `NS-205` | Menyelesaikan seluruh **Sprint 2** pada branch `feat/sprint-2` dan merge ke `main`: Utilitas kompresi gambar client-side (`<= 1280px`), Gemini Multimodal Food Vision (`food-vision.service.ts`) dengan `responseSchema` JSON terstruktur, Hybrid Manual Macro Estimator (`manual-estimator.service.ts`), endpoint CRUD Meal Logs (`meals.routes.ts`), dan halaman Dual Logger `/log` (Tab Kamera AI + Tab Input Manual Gram). | Principal Architect Agent |
+| `2026-11-06` | `NS-301`, `NS-302`, `NS-303` | Menyelesaikan seluruh **Sprint 3** pada branch `feat/sprint-3` dan merge ke `main`: Komponen SVG `CalorieRing`, halaman `/dashboard` interaktif (Date Navigator, Calorie Ring, Macro Progress Bars, Meal Timeline), serta halaman `/analytics` (7-day Calorie Adherence Chart, Weight Log History, dan BMI Category Tracker). | Principal Architect Agent |
+| `2026-11-06` | `NS-401`, `NS-402`, `NS-403` | Menyelesaikan seluruh **Sprint 4** pada branch `feat/sprint-4` dan merge ke `main`: Backend Contextual AI Bulking & Diet Coach (`chat.routes.ts`) dengan injeksi real-time profil BMR/TDEE dan sisa kalori/protein harian ke `systemInstruction`, halaman `/chat` dengan Quick Prompt Chips, serta graceful fallback saat BYOK API Key belum diatur. | Principal Architect Agent |
+| `2026-11-06` | `NS-501` – `NS-504` | Menyelesaikan seluruh **Sprint 5** pada branch `feat/sprint-5` dan merge ke `main`: Service Worker PWA (`public/sw.js`) & ikon (`public/icons/icon.svg`), Web Push VAPID (`/api/v1/notifications/*`) + Cron Scheduler pengingat makan harian (`meal-reminder.job.ts`), halaman `/settings` lengkap, serta verifikasi akhir End-to-End (`pnpm test`, `pnpm typecheck`, `pnpm build` 100% sukses). | Principal Architect Agent |
