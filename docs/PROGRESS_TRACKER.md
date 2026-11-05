@@ -1,7 +1,7 @@
 # Agile Progress Tracker (PROGRESS_TRACKER.md) — NutriSnap
 
 > **Current Active Sprint:** Sprint 5 — PWA, Scheduled Meal Push Notifications & Coolify (Sprint 0–4 Completed)  
-> **Overall Project Completion:** `92 / 98 Story Points (93.9%)`  
+> **Overall Project Completion:** `95 / 98 Story Points (96.9%)`  
 > **Last Updated:** 2026-11-06
 
 ---
@@ -15,8 +15,8 @@
 | **Sprint 2** | Dual Nutrition Logging (AI Vision + Manual Gram) | `24 / 24 SP` | `100.0%` | 🟢 `DONE` |
 | **Sprint 3** | Interactive Dashboard, Responsive Nav & Analytics | `18 / 18 SP` | `100.0%` | 🟢 `DONE` |
 | **Sprint 4** | AI Bulking & Diet Assistant Chatbot | `13 / 13 SP` | `100.0%` | 🟢 `DONE` |
-| **Sprint 5** | PWA, Scheduled Meal Push Notifications & Coolify | `10 / 16 SP` | `62.5%` | 🟡 `IN_PROGRESS` |
-| **TOTAL** | **Seluruh Proyek NutriSnap** | **`92 / 98 SP`** | **`93.9%`** | 🟡 **`ACTIVE`** |
+| **Sprint 5** | PWA, Scheduled Meal Push Notifications & Coolify | `13 / 16 SP` | `81.3%` | 🟡 `IN_PROGRESS` |
+| **TOTAL** | **Seluruh Proyek NutriSnap** | **`95 / 98 SP`** | **`96.9%`** | 🟡 **`ACTIVE`** |
 
 ---
 
@@ -55,8 +55,8 @@
 ### Sprint 5: PWA, Scheduled Push Notifications & Coolify Production Readiness
 - [x] **`NS-501`** (5 SP) — Konfigurasi PWA (`manifest.ts`, ikon multi-ukuran, Apple PWA meta tags, Service Worker `public/sw.js`, & Install Banner) — **DONE**
 - [x] **`NS-502`** (5 SP) — Modul Web Push VAPID (`/api/v1/notifications/*`) & Cron Scheduler (`meal-reminder.job.ts`) untuk mengecek makan harian yang belum di-log — **DONE**
-- [/] **`NS-503`** (3 SP) — Halaman `/settings` lengkap: Manajemen BYOK API Key, Edit Target Berat/Kalori, Pengaturan Jam Push Notification, & Toggle Light/Dark Mode — **IN_PROGRESS**
-- [ ] **`NS-504`** (3 SP) — Pembuatan `Dockerfile` (`apps/frontend` & `apps/backend`), `docker-compose.coolify.yml`, `.env.example`, dan pengujian build End-to-End — **TODO**
+- [x] **`NS-503`** (3 SP) — Halaman `/settings` lengkap: Manajemen BYOK API Key, Edit Target Berat/Kalori, Pengaturan Jam Push Notification, & Toggle Light/Dark Mode — **DONE**
+- [/] **`NS-504`** (3 SP) — Pembuatan `Dockerfile` (`apps/frontend` & `apps/backend`), `docker-compose.coolify.yml`, `.env.example`, dan pengujian build End-to-End — **IN_PROGRESS**
 
 ---
 
