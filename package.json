@@ -1,0 +1,23 @@
+{
+  "name": "nutrisnap-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NutriSnap — AI-Powered Nutrition, Bulking & Diet Tracker PWA Monorepo",
+  "packageManager": "pnpm@12.16.1",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "dev:frontend": "pnpm --filter @nutrisnap/frontend dev",
+    "dev:backend": "pnpm --filter @nutrisnap/backend dev",
+    "build": "pnpm --filter @nutrisnap/shared build && pnpm --filter @nutrisnap/backend build && pnpm --filter @nutrisnap/frontend build",
+    "typecheck": "pnpm --filter @nutrisnap/shared typecheck && pnpm --filter @nutrisnap/backend typecheck && pnpm --filter @nutrisnap/frontend typecheck",
+    "lint": "pnpm --r lint",
+    "test": "pnpm --filter @nutrisnap/shared test && pnpm --filter @nutrisnap/backend test",
+    "db:generate": "pnpm --filter @nutrisnap/backend db:generate",
+    "db:migrate": "pnpm --filter @nutrisnap/backend db:migrate",
+    "db:seed": "pnpm --filter @nutrisnap/backend db:seed"
+  }
+}
+

@@ -1,0 +1,81 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nutrisnap-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nutrisnap}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nutrisnap_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-nutrisnap_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nutrisnap} -d ${POSTGRES_DB:-nutrisnap_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nutrisnap-net
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: nutrisnap-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      BACKEND_PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nutrisnap}:${POSTGRES_PASSWORD:-nutrisnap_secret}@postgres:5432/${POSTGRES_DB:-nutrisnap_db}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      SESSION_SECRET: ${SESSION_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
+      NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@nutrisnap.app}
+      STORAGE_MODE: local
+      STORAGE_LOCAL_DIR: /app/storage_data
+    volumes:
+      - storage_data:/app/storage_data
+    ports:
+      - "4000:4000"
+    networks:
+      - nutrisnap-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    container_name: nutrisnap-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000/api/v1}
+      INTERNAL_API_URL: http://backend:4000/api/v1
+      NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
+    ports:
+      - "3000:3000"
+    networks:
+      - nutrisnap-net
+
+volumes:
+  postgres_data:
+  storage_data:
+
+networks:
+  nutrisnap-net:
+    driver: bridge
+
