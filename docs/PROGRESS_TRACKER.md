@@ -1,7 +1,7 @@
 # Agile Progress Tracker (PROGRESS_TRACKER.md) — NutriSnap
 
-> **Current Active Sprint:** Sprint 4 — AI Bulking & Diet Assistant Chatbot (Sprint 0–3 Completed)  
-> **Overall Project Completion:** `79 / 98 Story Points (80.6%)`  
+> **Current Active Sprint:** Sprint 5 — PWA, Scheduled Meal Push Notifications & Coolify (Sprint 0–4 Completed)  
+> **Overall Project Completion:** `82 / 98 Story Points (83.7%)`  
 > **Last Updated:** 2026-11-06
 
 ---
@@ -14,9 +14,9 @@
 | **Sprint 1** | Auth, Personalization Onboarding & BYOK Vault | `21 / 21 SP` | `100.0%` | 🟢 `DONE` |
 | **Sprint 2** | Dual Nutrition Logging (AI Vision + Manual Gram) | `24 / 24 SP` | `100.0%` | 🟢 `DONE` |
 | **Sprint 3** | Interactive Dashboard, Responsive Nav & Analytics | `18 / 18 SP` | `100.0%` | 🟢 `DONE` |
-| **Sprint 4** | AI Bulking & Diet Assistant Chatbot | `0 / 13 SP` | `0.0%` | 🟡 `IN_PROGRESS` |
-| **Sprint 5** | PWA, Scheduled Meal Push Notifications & Coolify | `0 / 16 SP` | `0.0%` | ⚪ `TODO` |
-| **TOTAL** | **Seluruh Proyek NutriSnap** | **`79 / 98 SP`** | **`80.6%`** | 🟡 **`ACTIVE`** |
+| **Sprint 4** | AI Bulking & Diet Assistant Chatbot | `13 / 13 SP` | `100.0%` | 🟢 `DONE` |
+| **Sprint 5** | PWA, Scheduled Meal Push Notifications & Coolify | `0 / 16 SP` | `0.0%` | 🟡 `IN_PROGRESS` |
+| **TOTAL** | **Seluruh Proyek NutriSnap** | **`82 / 98 SP`** | **`83.7%`** | 🟡 **`ACTIVE`** |
 
 ---
 
@@ -48,9 +48,9 @@
 - [x] **`NS-303`** (5 SP) — Halaman `/analytics`: Pencatatan berat badan berkala (`weight_logs`), BMI Tracker, & grafik kepatuhan kalori mingguan — **DONE**
 
 ### Sprint 4: Contextual AI Bulking & Diet Assistant Chatbot
-- [ ] **`NS-401`** (5 SP) — Backend AI Diet Coach (`POST /api/v1/chat/message` & `GET /api/v1/chat/history`) dengan injeksi dinamis profil BMR/TDEE & sisa kalori/protein hari ini — **TODO**
-- [ ] **`NS-402`** (5 SP) — Halaman `/chat`: Antarmuka Chatbot modern dengan *Quick Prompt Chips*, dukungan Markdown, dan indikator *status konteks nutrisi* — **TODO**
-- [ ] **`NS-403`** (3 SP) — Penanganan *graceful fallback* & pesan panduan ramah jika BYOK API Key pengguna belum diatur atau mencapai kuota limit — **TODO**
+- [x] **`NS-401`** (5 SP) — Backend AI Diet Coach (`POST /api/v1/chat/message` & `GET /api/v1/chat/history`) dengan injeksi dinamis profil BMR/TDEE & sisa kalori/protein hari ini — **DONE**
+- [x] **`NS-402`** (5 SP) — Halaman `/chat`: Antarmuka Chatbot modern dengan *Quick Prompt Chips*, dukungan Markdown, dan indikator *status konteks nutrisi* — **DONE**
+- [x] **`NS-403`** (3 SP) — Penanganan *graceful fallback* & pesan panduan ramah jika BYOK API Key pengguna belum diatur atau mencapai kuota limit — **DONE**
 
 ### Sprint 5: PWA, Scheduled Push Notifications & Coolify Production Readiness
 - [ ] **`NS-501`** (5 SP) — Konfigurasi PWA (`manifest.ts`, ikon multi-ukuran, Apple PWA meta tags, Service Worker `public/sw.js`, & Install Banner) — **TODO**
