@@ -137,3 +137,4 @@ export async function registerApiKeyRoutes(app: FastifyInstance): Promise<void> 
     };
   });
 }
+

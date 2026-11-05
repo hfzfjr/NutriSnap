@@ -91,3 +91,4 @@ export async function registerNotificationRoutes(
     };
   });
 }
+

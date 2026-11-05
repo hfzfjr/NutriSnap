@@ -273,3 +273,4 @@ export default function AiDietCoachChatPage() {
     </div>
   );
 }
+

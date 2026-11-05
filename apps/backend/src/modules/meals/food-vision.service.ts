@@ -209,3 +209,4 @@ export async function analyzeFoodPhotoWithGemini(params: {
     nutritionNotes: parsedJson.nutritionNotes,
   });
 }
+

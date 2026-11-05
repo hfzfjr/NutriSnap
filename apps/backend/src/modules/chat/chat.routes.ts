@@ -199,3 +199,4 @@ export async function registerChatRoutes(app: FastifyInstance): Promise<void> {
     };
   });
 }
+

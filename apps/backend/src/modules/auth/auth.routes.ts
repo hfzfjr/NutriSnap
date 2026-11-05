@@ -202,3 +202,4 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     };
   });
 }
+

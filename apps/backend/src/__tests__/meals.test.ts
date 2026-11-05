@@ -96,3 +96,4 @@ describe("@nutrisnap/backend — Dual Nutrition Logging (AI Vision & Manual CRUD
     await app.close();
   });
 });
+

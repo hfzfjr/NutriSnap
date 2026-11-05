@@ -46,3 +46,4 @@ describe("@nutrisnap/backend — AES-256-GCM BYOK Encryption Vault [NS-101]", ()
     expect(() => decryptApiKey(encryptedKey, keyB)).toThrow();
   });
 });
+

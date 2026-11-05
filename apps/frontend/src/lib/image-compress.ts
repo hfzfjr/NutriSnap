@@ -74,3 +74,4 @@ export async function compressFoodImageClient(
     reader.readAsDataURL(file);
   });
 }
+

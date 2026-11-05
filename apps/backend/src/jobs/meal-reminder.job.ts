@@ -108,3 +108,4 @@ export function startMealReminderCronJob(): void {
     void evaluateAndSendUnloggedMealReminders();
   });
 }
+
