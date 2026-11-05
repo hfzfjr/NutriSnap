@@ -8,6 +8,7 @@ import {
   INDONESIAN_FITNESS_FOODS,
   estimateMacrosFromLocalCatalog,
 } from "./db/seed-foods.js";
+import { registerApiKeyRoutes } from "./modules/apikey/apikey.routes.js";
 import { registerAuthRoutes } from "./modules/auth/auth.routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -28,6 +29,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   await registerAuthRoutes(app);
+  await registerApiKeyRoutes(app);
 
   // Global Error Handler sesuai standar amplop respons di docs/API_CONTRACT.md
   app.setErrorHandler((error, _request, reply) => {

@@ -1,7 +1,7 @@
 # Agile Progress Tracker (PROGRESS_TRACKER.md) — NutriSnap
 
 > **Current Active Sprint:** Sprint 1 — Auth, Personalization Onboarding & BYOK Vault  
-> **Overall Project Completion:** `26 / 98 Story Points (26.5%)`  
+> **Overall Project Completion:** `31 / 98 Story Points (31.6%)`  
 > **Last Updated:** 2026-11-06
 
 ---
@@ -11,12 +11,12 @@
 | Sprint | Nama Sprint | Story Points (Done / Total) | Progress | Status |
 | :--- | :--- | :---: | :---: | :---: |
 | **Sprint 0** | Foundation, Agile Docs, Monorepo & Database | `16 / 16 SP` | `100.0%` | 🟢 `DONE` |
-| **Sprint 1** | Auth, Personalization Onboarding & BYOK Vault | `10 / 21 SP` | `47.6%` | 🟡 `IN_PROGRESS` |
+| **Sprint 1** | Auth, Personalization Onboarding & BYOK Vault | `15 / 21 SP` | `71.4%` | 🟡 `IN_PROGRESS` |
 | **Sprint 2** | Dual Nutrition Logging (AI Vision + Manual Gram) | `0 / 24 SP` | `0.0%` | ⚪ `TODO` |
 | **Sprint 3** | Interactive Dashboard, Responsive Nav & Analytics | `0 / 18 SP` | `0.0%` | ⚪ `TODO` |
 | **Sprint 4** | AI Bulking & Diet Assistant Chatbot | `0 / 13 SP` | `0.0%` | ⚪ `TODO` |
 | **Sprint 5** | PWA, Scheduled Meal Push Notifications & Coolify | `0 / 16 SP` | `0.0%` | ⚪ `TODO` |
-| **TOTAL** | **Seluruh Proyek NutriSnap** | **`26 / 98 SP`** | **`26.5%`** | 🟡 **`ACTIVE`** |
+| **TOTAL** | **Seluruh Proyek NutriSnap** | **`31 / 98 SP`** | **`31.6%`** | 🟡 **`ACTIVE`** |
 
 ---
 
@@ -32,8 +32,8 @@
 ### Sprint 1: Authentication, Onboarding Engine & BYOK Security Vault
 - [x] **`NS-101`** (5 SP) — Implementasi Modul Enkripsi `AES-256-GCM` (`encryptApiKey`, `decryptApiKey`) beserta Unit Test keamanan — **DONE**
 - [x] **`NS-102`** (5 SP) — Implementasi Google OAuth 2.0 Authentication & Session Management (`auth` module + middleware) — **DONE**
-- [/] **`NS-103`** (5 SP) — Endpoint & UI manajemen BYOK Gemini API Key (`/api/v1/apikey` + live validation ke Google Gemini API) — **IN_PROGRESS**
-- [ ] **`NS-104`** (6 SP) — Endpoint & Multi-step UI Wizard `/onboarding` (Input Nama, Usia, Tinggi, Berat, Gender, Target Berat, Target Bulan/Tahun -> Kalkulasi BMI, TDEE, Kalori & Protein) — **TODO**
+- [x] **`NS-103`** (5 SP) — Endpoint & UI manajemen BYOK Gemini API Key (`/api/v1/apikey` + live validation ke Google Gemini API) — **DONE**
+- [/] **`NS-104`** (6 SP) — Endpoint & Multi-step UI Wizard `/onboarding` (Input Nama, Usia, Tinggi, Berat, Gender, Target Berat, Target Bulan/Tahun -> Kalkulasi BMI, TDEE, Kalori & Protein) — **IN_PROGRESS**
 
 ### Sprint 2: Dual Nutrition Logging (AI Food Photo Scanner & Manual Input)
 - [ ] **`NS-201`** (3 SP) — Utilitas kompresi gambar di browser (`<= 1280px`, WebP/JPEG) untuk mempercepat upload dari kamera HP — **TODO**
