@@ -215,11 +215,21 @@ export const INDONESIAN_FITNESS_FOODS: ReferenceFoodItem[] = [
  */
 export function estimateMacrosFromLocalCatalog(foodQuery: string, weightGrams: number) {
   const normalizedQuery = foodQuery.trim().toLowerCase();
-  const matched = INDONESIAN_FITNESS_FOODS.find(
+  if (!normalizedQuery) return null;
+
+  // Prioritas 1: Exact match atau nama katalog mengandung seluruh query
+  let matched = INDONESIAN_FITNESS_FOODS.find(
     (item) =>
-      item.name.toLowerCase().includes(normalizedQuery) ||
-      normalizedQuery.includes(item.name.toLowerCase().split(" ")[0] ?? "")
+      item.name.toLowerCase() === normalizedQuery ||
+      item.name.toLowerCase().includes(normalizedQuery)
   );
+
+  // Prioritas 2: Query mengandung seluruh nama item katalog
+  if (!matched) {
+    matched = INDONESIAN_FITNESS_FOODS.find((item) =>
+      normalizedQuery.includes(item.name.toLowerCase())
+    );
+  }
 
   if (!matched) {
     return null;
