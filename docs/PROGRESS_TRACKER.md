@@ -1,7 +1,7 @@
 # Agile Progress Tracker (PROGRESS_TRACKER.md) — NutriSnap
 
-> **Current Active Sprint:** Sprint 2 — Dual Nutrition Logging (Sprint 0 & Sprint 1 Completed)  
-> **Overall Project Completion:** `37 / 98 Story Points (37.8%)`  
+> **Current Active Sprint:** Sprint 3 — Interactive Dashboard, Responsive Nav & Analytics (Sprint 0–2 Completed)  
+> **Overall Project Completion:** `61 / 98 Story Points (62.2%)`  
 > **Last Updated:** 2026-11-06
 
 ---
@@ -12,11 +12,11 @@
 | :--- | :--- | :---: | :---: | :---: |
 | **Sprint 0** | Foundation, Agile Docs, Monorepo & Database | `16 / 16 SP` | `100.0%` | 🟢 `DONE` |
 | **Sprint 1** | Auth, Personalization Onboarding & BYOK Vault | `21 / 21 SP` | `100.0%` | 🟢 `DONE` |
-| **Sprint 2** | Dual Nutrition Logging (AI Vision + Manual Gram) | `0 / 24 SP` | `0.0%` | 🟡 `IN_PROGRESS` |
-| **Sprint 3** | Interactive Dashboard, Responsive Nav & Analytics | `0 / 18 SP` | `0.0%` | ⚪ `TODO` |
+| **Sprint 2** | Dual Nutrition Logging (AI Vision + Manual Gram) | `24 / 24 SP` | `100.0%` | 🟢 `DONE` |
+| **Sprint 3** | Interactive Dashboard, Responsive Nav & Analytics | `0 / 18 SP` | `0.0%` | 🟡 `IN_PROGRESS` |
 | **Sprint 4** | AI Bulking & Diet Assistant Chatbot | `0 / 13 SP` | `0.0%` | ⚪ `TODO` |
 | **Sprint 5** | PWA, Scheduled Meal Push Notifications & Coolify | `0 / 16 SP` | `0.0%` | ⚪ `TODO` |
-| **TOTAL** | **Seluruh Proyek NutriSnap** | **`37 / 98 SP`** | **`37.8%`** | 🟡 **`ACTIVE`** |
+| **TOTAL** | **Seluruh Proyek NutriSnap** | **`61 / 98 SP`** | **`62.2%`** | 🟡 **`ACTIVE`** |
 
 ---
 
@@ -36,11 +36,11 @@
 - [x] **`NS-104`** (6 SP) — Endpoint & Multi-step UI Wizard `/onboarding` (Input Nama, Usia, Tinggi, Berat, Gender, Target Berat, Target Bulan/Tahun -> Kalkulasi BMI, TDEE, Kalori & Protein) — **DONE**
 
 ### Sprint 2: Dual Nutrition Logging (AI Food Photo Scanner & Manual Input)
-- [ ] **`NS-201`** (3 SP) — Utilitas kompresi gambar di browser (`<= 1280px`, WebP/JPEG) untuk mempercepat upload dari kamera HP — **TODO**
-- [ ] **`NS-202`** (8 SP) — Service Gemini Multimodal Food Vision (`POST /api/v1/meals/scan-photo`) dengan `responseSchema` JSON terstruktur — **TODO**
-- [ ] **`NS-203`** (5 SP) — Service Kalkulator Makro Manual (`POST /api/v1/meals/estimate-manual`) menggunakan DB makanan lokal + fallback Gemini — **TODO**
-- [ ] **`NS-204`** (3 SP) — Endpoint CRUD Meal Logs (`POST /api/v1/meals`, `GET /api/v1/meals/daily`, `DELETE /api/v1/meals/:id`) — **TODO**
-- [ ] **`NS-205`** (5 SP) — Halaman `/log` Dual Logger UI: Tab 1 (AI Camera Scanner + Editable Confirmation Card) & Tab 2 (Manual Input + Berat Gram) — **TODO**
+- [x] **`NS-201`** (3 SP) — Utilitas kompresi gambar di browser (`<= 1280px`, WebP/JPEG) untuk mempercepat upload dari kamera HP — **DONE**
+- [x] **`NS-202`** (8 SP) — Service Gemini Multimodal Food Vision (`POST /api/v1/meals/scan-photo`) dengan `responseSchema` JSON terstruktur — **DONE**
+- [x] **`NS-203`** (5 SP) — Service Kalkulator Makro Manual (`POST /api/v1/meals/estimate-manual`) menggunakan DB makanan lokal + fallback Gemini — **DONE**
+- [x] **`NS-204`** (3 SP) — Endpoint CRUD Meal Logs (`POST /api/v1/meals`, `GET /api/v1/meals/daily`, `DELETE /api/v1/meals/:id`) — **DONE**
+- [x] **`NS-205`** (5 SP) — Halaman `/log` Dual Logger UI: Tab 1 (AI Camera Scanner + Editable Confirmation Card) & Tab 2 (Manual Input + Berat Gram) — **DONE**
 
 ### Sprint 3: Interactive Dashboard, Responsive Navigation (`<768px`) & Analytics
 - [ ] **`NS-301`** (5 SP) — Responsive App Shell: Fixed Bottom Navbar pada `< 768px` (dengan tombol tengah Scan/Log) & Sidebar pada `>= 768px` — **TODO**
