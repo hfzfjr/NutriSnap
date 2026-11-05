@@ -10,6 +10,7 @@ import {
 } from "./db/seed-foods.js";
 import { registerApiKeyRoutes } from "./modules/apikey/apikey.routes.js";
 import { registerAuthRoutes } from "./modules/auth/auth.routes.js";
+import { registerChatRoutes } from "./modules/chat/chat.routes.js";
 import { registerMealRoutes } from "./modules/meals/meals.routes.js";
 import { registerProfileRoutes } from "./modules/profile/profile.routes.js";
 
@@ -34,6 +35,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await registerApiKeyRoutes(app);
   await registerProfileRoutes(app);
   await registerMealRoutes(app);
+  await registerChatRoutes(app);
 
   // Global Error Handler sesuai standar amplop respons di docs/API_CONTRACT.md
   app.setErrorHandler((error, _request, reply) => {
