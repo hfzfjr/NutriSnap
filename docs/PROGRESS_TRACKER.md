@@ -1,7 +1,7 @@
 # Agile Progress Tracker (PROGRESS_TRACKER.md) — NutriSnap
 
-> **Current Active Sprint:** Sprint 3 — Interactive Dashboard, Responsive Nav & Analytics (Sprint 0–2 Completed)  
-> **Overall Project Completion:** `61 / 98 Story Points (62.2%)`  
+> **Current Active Sprint:** Sprint 4 — AI Bulking & Diet Assistant Chatbot (Sprint 0–3 Completed)  
+> **Overall Project Completion:** `79 / 98 Story Points (80.6%)`  
 > **Last Updated:** 2026-11-06
 
 ---
@@ -13,10 +13,10 @@
 | **Sprint 0** | Foundation, Agile Docs, Monorepo & Database | `16 / 16 SP` | `100.0%` | 🟢 `DONE` |
 | **Sprint 1** | Auth, Personalization Onboarding & BYOK Vault | `21 / 21 SP` | `100.0%` | 🟢 `DONE` |
 | **Sprint 2** | Dual Nutrition Logging (AI Vision + Manual Gram) | `24 / 24 SP` | `100.0%` | 🟢 `DONE` |
-| **Sprint 3** | Interactive Dashboard, Responsive Nav & Analytics | `5 / 18 SP` | `27.8%` | 🟡 `IN_PROGRESS` |
-| **Sprint 4** | AI Bulking & Diet Assistant Chatbot | `0 / 13 SP` | `0.0%` | ⚪ `TODO` |
+| **Sprint 3** | Interactive Dashboard, Responsive Nav & Analytics | `18 / 18 SP` | `100.0%` | 🟢 `DONE` |
+| **Sprint 4** | AI Bulking & Diet Assistant Chatbot | `0 / 13 SP` | `0.0%` | 🟡 `IN_PROGRESS` |
 | **Sprint 5** | PWA, Scheduled Meal Push Notifications & Coolify | `0 / 16 SP` | `0.0%` | ⚪ `TODO` |
-| **TOTAL** | **Seluruh Proyek NutriSnap** | **`66 / 98 SP`** | **`67.3%`** | 🟡 **`ACTIVE`** |
+| **TOTAL** | **Seluruh Proyek NutriSnap** | **`79 / 98 SP`** | **`80.6%`** | 🟡 **`ACTIVE`** |
 
 ---
 
@@ -45,7 +45,7 @@
 ### Sprint 3: Interactive Dashboard, Responsive Navigation (`<768px`) & Analytics
 - [x] **`NS-301`** (5 SP) — Responsive App Shell: Fixed Bottom Navbar pada `< 768px` (dengan tombol tengah Scan/Log) & Sidebar pada `>= 768px` — **DONE**
 - [x] **`NS-302`** (8 SP) — Halaman `/dashboard`: Calorie Ring, Surplus/Deficit Status Tracker, Macro Progress Bars (Protein/Carbs/Fat), & Daily Meal Timeline — **DONE**
-- [/] **`NS-303`** (5 SP) — Halaman `/analytics`: Pencatatan berat badan berkala (`weight_logs`), BMI Tracker, & grafik kepatuhan kalori mingguan — **IN_PROGRESS**
+- [x] **`NS-303`** (5 SP) — Halaman `/analytics`: Pencatatan berat badan berkala (`weight_logs`), BMI Tracker, & grafik kepatuhan kalori mingguan — **DONE**
 
 ### Sprint 4: Contextual AI Bulking & Diet Assistant Chatbot
 - [ ] **`NS-401`** (5 SP) — Backend AI Diet Coach (`POST /api/v1/chat/message` & `GET /api/v1/chat/history`) dengan injeksi dinamis profil BMR/TDEE & sisa kalori/protein hari ini — **TODO**

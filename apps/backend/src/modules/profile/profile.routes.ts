@@ -144,4 +144,47 @@ export async function registerProfileRoutes(app: FastifyInstance): Promise<void>
       meta: { timestamp: new Date().toISOString() },
     };
   });
+
+  // 4. GET /api/v1/analytics/overview
+  app.get("/api/v1/analytics/overview", async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, reply);
+    if (!user) return;
+
+    const profile = await repository.getUserProfile(user.id);
+    const weightLogs = await repository.getWeightLogs(user.id);
+    const allMeals = await repository.getAllUserMealLogs(user.id);
+
+    // Kelompokkan total kalori & protein per tanggal (7 hari terakhir)
+    const dailyMap = new Map<
+      string,
+      { date: string; calories: number; proteinG: number }
+    >();
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateKey = d.toISOString().slice(0, 10);
+      dailyMap.set(dateKey, { date: dateKey, calories: 0, proteinG: 0 });
+    }
+
+    for (const meal of allMeals) {
+      const existing = dailyMap.get(meal.loggedDate);
+      if (existing) {
+        existing.calories += meal.totalCalories;
+        existing.proteinG = Number(
+          (existing.proteinG + meal.totalProteinG).toFixed(1)
+        );
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        profile,
+        weightLogs,
+        weeklySummary: Array.from(dailyMap.values()),
+      },
+      meta: { timestamp: new Date().toISOString() },
+    };
+  });
 }
