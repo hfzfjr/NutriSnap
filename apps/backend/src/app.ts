@@ -8,6 +8,7 @@ import {
   INDONESIAN_FITNESS_FOODS,
   estimateMacrosFromLocalCatalog,
 } from "./db/seed-foods.js";
+import { registerAuthRoutes } from "./modules/auth/auth.routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -25,6 +26,8 @@ export async function buildApp(): Promise<FastifyInstance> {
     secret: env.SESSION_SECRET,
     hook: "onRequest",
   });
+
+  await registerAuthRoutes(app);
 
   // Global Error Handler sesuai standar amplop respons di docs/API_CONTRACT.md
   app.setErrorHandler((error, _request, reply) => {
