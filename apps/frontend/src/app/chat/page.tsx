@@ -152,11 +152,11 @@ export default function AiDietCoachChatPage() {
               </Badge>
               <span className="text-muted-foreground tabular-nums">
                 Sisa Hari Ini:{" "}
-                <strong className="text-emerald-500">
+                <strong className="text-primary font-semibold">
                   {Math.max(0, context.remainingCalories)} kcal
                 </strong>{" "}
                 •{" "}
-                <strong className="text-indigo-500">
+                <strong className="text-macro-protein font-semibold">
                   {context.remainingProteinG}g Protein
                 </strong>
               </span>

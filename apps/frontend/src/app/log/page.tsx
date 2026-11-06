@@ -340,7 +340,7 @@ export default function DualMealLoggerPage() {
         <div
           className={`rounded-xl border p-3 text-xs ${
             feedback.type === "success"
-              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
+              ? "border-status-ontrack/40 bg-status-ontrack/10 text-status-ontrack font-medium"
               : "border-destructive/40 bg-destructive/10 text-destructive"
           }`}
         >
@@ -451,7 +451,7 @@ export default function DualMealLoggerPage() {
                         <p className="text-sm font-semibold">{item.foodName}</p>
                         <p className="text-xs text-muted-foreground tabular-nums">
                           {item.calories} kcal •{" "}
-                          <strong className="text-indigo-500">
+                          <strong className="text-macro-protein font-semibold">
                             {item.proteinG}g Protein
                           </strong>{" "}
                           • {item.carbsG}g Karbo • {item.fatG}g Lemak
@@ -603,7 +603,7 @@ export default function DualMealLoggerPage() {
 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-emerald-500">
+                  <label className="text-xs font-semibold text-primary">
                     Kalori (kcal)
                   </label>
                   <Input
@@ -614,7 +614,7 @@ export default function DualMealLoggerPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-indigo-500">
+                  <label className="text-xs font-semibold text-macro-protein">
                     Protein (g)
                   </label>
                   <Input
@@ -626,7 +626,7 @@ export default function DualMealLoggerPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-amber-500">
+                  <label className="text-xs font-semibold text-macro-carbs">
                     Karbohidrat (g)
                   </label>
                   <Input
@@ -638,7 +638,7 @@ export default function DualMealLoggerPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-rose-500">
+                  <label className="text-xs font-semibold text-macro-fat">
                     Lemak (g)
                   </label>
                   <Input

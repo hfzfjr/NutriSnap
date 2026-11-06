@@ -23,6 +23,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { MacroBar } from "@/components/ui/macro-bar";
 import { Progress } from "@/components/ui/progress";
 import { apiFetch } from "@/lib/api-client";
 import { shiftISO, todayISO } from "@/lib/date";
@@ -261,69 +262,22 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Protein Progress */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="font-semibold text-indigo-500">
-                      Protein (Target Otot Utama)
-                    </span>
-                    <span className="font-semibold tabular-nums">
-                      {totals.proteinG}g / {targets.targetDailyProteinG}g
-                    </span>
-                  </div>
-                  <Progress
-                    value={Math.min(
-                      100,
-                      Math.round(
-                        (totals.proteinG /
-                          Math.max(1, targets.targetDailyProteinG)) *
-                          100
-                      )
-                    )}
-                    indicatorClassName="bg-indigo-500"
+                {/* Macro Progress Bars */}
+                <div className="space-y-3 pt-1">
+                  <MacroBar
+                    type="protein"
+                    consumedG={totals.proteinG}
+                    targetG={targets.targetDailyProteinG}
                   />
-                </div>
-
-                {/* Carbs Progress */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="font-semibold text-amber-500">
-                      Karbohidrat (Sumber Energi)
-                    </span>
-                    <span className="font-semibold tabular-nums">
-                      {totals.carbsG}g / {targets.targetDailyCarbsG}g
-                    </span>
-                  </div>
-                  <Progress
-                    value={Math.min(
-                      100,
-                      Math.round(
-                        (totals.carbsG / Math.max(1, targets.targetDailyCarbsG)) *
-                          100
-                      )
-                    )}
-                    indicatorClassName="bg-amber-500"
+                  <MacroBar
+                    type="carbs"
+                    consumedG={totals.carbsG}
+                    targetG={targets.targetDailyCarbsG}
                   />
-                </div>
-
-                {/* Fat Progress */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="font-semibold text-rose-500">
-                      Lemak Esensial
-                    </span>
-                    <span className="font-semibold tabular-nums">
-                      {totals.fatG}g / {targets.targetDailyFatG}g
-                    </span>
-                  </div>
-                  <Progress
-                    value={Math.min(
-                      100,
-                      Math.round(
-                        (totals.fatG / Math.max(1, targets.targetDailyFatG)) * 100
-                      )
-                    )}
-                    indicatorClassName="bg-rose-500"
+                  <MacroBar
+                    type="fat"
+                    consumedG={totals.fatG}
+                    targetG={targets.targetDailyFatG}
                   />
                 </div>
               </div>
@@ -395,7 +349,7 @@ export default function DashboardPage() {
                         </div>
                         <p className="text-[11px] text-muted-foreground tabular-nums">
                           {meal.totalCalories} kcal •{" "}
-                          <strong className="text-indigo-500">
+                          <strong className="text-macro-protein font-semibold">
                             {meal.totalProteinG}g P
                           </strong>{" "}
                           • {meal.totalCarbsG}g C • {meal.totalFatG}g F

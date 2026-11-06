@@ -10,11 +10,11 @@ const badgeVariants = cva(
         default:
           "border-transparent bg-primary/15 text-primary",
         surplus:
-          "border-cyan-500/30 bg-cyan-500/15 text-cyan-600 dark:text-cyan-400",
+          "border-status-ontrack/30 bg-status-ontrack/15 text-status-ontrack",
         deficit:
-          "border-violet-500/30 bg-violet-500/15 text-violet-600 dark:text-violet-400",
+          "border-status-under/30 bg-status-under/15 text-status-under",
         maintenance:
-          "border-blue-500/30 bg-blue-500/15 text-blue-600 dark:text-blue-400",
+          "border-border bg-secondary text-foreground",
         secondary:
           "border-transparent bg-secondary text-secondary-foreground",
         destructive:

@@ -193,7 +193,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-start gap-2.5 text-xs text-muted-foreground">
-            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-status-ontrack" />
             <span>
               Seluruh komunikasi antara Frontend dan Backend berjalan di dalam
               jaringan internal Coolify. Kunci Gemini API Anda tidak pernah

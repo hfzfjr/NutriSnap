@@ -151,7 +151,7 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-1.5">
-              <Activity className="h-4 w-4 text-indigo-500" />
+              <Activity className="h-4 w-4 text-primary" />
               Body Mass Index (BMI)
             </CardDescription>
             <CardTitle className="text-3xl font-extrabold tabular-nums">
@@ -168,10 +168,10 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-1.5">
-              <Flame className="h-4 w-4 text-emerald-500" />
+              <Flame className="h-4 w-4 text-accent" />
               Target Kalori Harian
             </CardDescription>
-            <CardTitle className="text-3xl font-extrabold tabular-nums text-emerald-500">
+            <CardTitle className="text-3xl font-extrabold tabular-nums text-foreground">
               {targetCalories !== null ? targetCalories.toLocaleString("id-ID") : "-"}{" "}
               <span className="text-sm font-normal text-muted-foreground">
                 kcal
@@ -215,12 +215,12 @@ export default function AnalyticsPage() {
                       <span className="text-muted-foreground tabular-nums">
                         <strong className="text-foreground">{day.calories}</strong>{" "}
                         / {targetCalories !== null ? `${targetCalories} kcal` : "-"} •{" "}
-                        <strong className="text-indigo-500">
+                        <strong className="text-macro-protein font-semibold">
                           {day.proteinG}g P
                         </strong>
                       </span>
                     </div>
-                    <Progress value={pct} indicatorClassName="bg-emerald-500" />
+                    <Progress value={pct} indicatorClassName="bg-primary" />
                   </div>
                 );
               })
