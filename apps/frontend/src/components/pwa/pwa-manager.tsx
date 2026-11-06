@@ -308,7 +308,6 @@ export function PwaPushReminderCard() {
                 htmlFor="time-breakfast"
                 className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer"
               >
-                <span className="text-sm">🍳</span>
                 <span>Jam Sarapan</span>
               </label>
               <Input
@@ -325,7 +324,6 @@ export function PwaPushReminderCard() {
                 htmlFor="time-lunch"
                 className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer"
               >
-                <span className="text-sm">🍲</span>
                 <span>Jam Makan Siang</span>
               </label>
               <Input
@@ -342,7 +340,6 @@ export function PwaPushReminderCard() {
                 htmlFor="time-dinner"
                 className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer"
               >
-                <span className="text-sm">🌙</span>
                 <span>Jam Makan Malam</span>
               </label>
               <Input

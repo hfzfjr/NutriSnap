@@ -3,6 +3,8 @@
 import type { DailyStatusEvaluation } from "@nutrisnap/shared";
 import {
   AlertCircle,
+  ArrowLeft,
+  ArrowRight,
   BotMessageSquare,
   Calendar,
   Camera,
@@ -160,11 +162,14 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Header, Greeting & Date Filter */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
-              {greeting}
-            </h1>
+        <div className="space-y-1">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            {greeting}
+          </h1>
+          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+            <span className="text-sm sm:text-base font-semibold text-foreground tracking-tight">
+              {formatDateLong(selectedDate)}
+            </span>
             {targets ? (
               <StatusPill
                 status={
@@ -182,11 +187,6 @@ export default function DashboardPage() {
               />
             ) : null}
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {formatDateLong(selectedDate)} •{" "}
-            {summary?.status.label ??
-              "Pantau kalori, protein, dan status surplus/defisit kamu hari ini."}
-          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -195,17 +195,18 @@ export default function DashboardPage() {
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 px-2 text-xs"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
               onClick={() => setSelectedDate(shiftISO(selectedDate, -1))}
               title="Hari Sebelumnya"
+              aria-label="Hari Sebelumnya"
             >
-              &larr;
+              <ArrowLeft className="h-4 w-4" />
             </Button>
             <Button
               type="button"
               variant={selectedDate === todayISO() ? "secondary" : "ghost"}
               size="sm"
-              className="h-8 px-2.5 text-xs font-semibold"
+              className="h-8 px-3 text-xs font-semibold"
               onClick={() => setSelectedDate(todayISO())}
             >
               Hari Ini
@@ -214,11 +215,12 @@ export default function DashboardPage() {
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 px-2 text-xs"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
               onClick={() => setSelectedDate(shiftISO(selectedDate, 1))}
               title="Hari Berikutnya"
+              aria-label="Hari Berikutnya"
             >
-              &rarr;
+              <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
 
