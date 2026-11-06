@@ -1,7 +1,15 @@
 "use client";
 
-import { Bell, CheckCircle2, Smartphone } from "lucide-react";
+import {
+  AlertCircle,
+  Bell,
+  CheckCircle2,
+  Clock,
+  Globe,
+  Smartphone,
+} from "lucide-react";
 import * as React from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { apiFetch } from "@/lib/api-client";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -26,24 +35,46 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 export function PwaPushReminderCard() {
-  const [swReady, setSwReady] = React.useState(false);
-  const [reminderEnabled, setReminderEnabled] = React.useState(true);
+  const [isStandalone, setIsStandalone] = React.useState(false);
+  const [hasSubscription, setHasSubscription] = React.useState(false);
+  const [reminderEnabled, setReminderEnabled] = React.useState(false);
   const [breakfastTime, setBreakfastTime] = React.useState("08:00");
   const [lunchTime, setLunchTime] = React.useState("13:00");
   const [dinnerTime, setDinnerTime] = React.useState("20:00");
+  const [timezone, setTimezone] = React.useState("Asia/Jakarta");
   const [isBusy, setIsBusy] = React.useState(false);
-  const [statusMsg, setStatusMsg] = React.useState<string | null>(null);
+  const [permissionState, setPermissionState] = React.useState<
+    NotificationPermission | "unsupported"
+  >("default");
 
   React.useEffect(() => {
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then(() => setSwReady(true))
-        .catch(() => {});
+    // Deteksi PWA Standalone
+    if (typeof window !== "undefined") {
+      const standalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as unknown as { standalone?: boolean }).standalone ===
+          true;
+      setIsStandalone(standalone);
+
+      if ("Notification" in window) {
+        setPermissionState(Notification.permission);
+      } else {
+        setPermissionState("unsupported");
+      }
+
+      // Deteksi timezone perangkat
+      try {
+        const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (detected) setTimezone(detected);
+      } catch {
+        // default Asia/Jakarta
+      }
     }
 
+    // Ambil preferensi notifikasi dari backend
     void apiFetch<{
       subscription: {
+        endpoint?: string;
         reminderEnabled: boolean;
         breakfastTime: string;
         lunchTime: string;
@@ -52,6 +83,7 @@ export function PwaPushReminderCard() {
     }>("/notifications/preferences")
       .then((res) => {
         if (res.subscription) {
+          setHasSubscription(Boolean(res.subscription.endpoint));
           setReminderEnabled(res.subscription.reminderEnabled);
           setBreakfastTime(res.subscription.breakfastTime);
           setLunchTime(res.subscription.lunchTime);
@@ -61,66 +93,125 @@ export function PwaPushReminderCard() {
       .catch(() => {});
   }, []);
 
-  const handleEnablePushAndSave = async () => {
-    setIsBusy(true);
-    setStatusMsg(null);
-    try {
-      let endpoint = "https://push.nutrisnap.local/device-default";
-      let p256dh = "BEl62iUYgUivxIkv69yViEuiBIa";
-      let auth = "UUxI4O8-FbRouAev";
+  const handleToggleReminder = async (checked: boolean) => {
+    setReminderEnabled(checked);
 
-      if (
-        typeof window !== "undefined" &&
-        "Notification" in window &&
-        "serviceWorker" in navigator
-      ) {
-        const perm = await Notification.requestPermission();
-        if (perm === "granted") {
-          const reg = await navigator.serviceWorker.ready;
-          const vapidRes = await apiFetch<{ publicKey: string }>(
-            "/notifications/vapid-public-key"
-          );
-          if (vapidRes.publicKey && reg.pushManager) {
-            try {
-              const sub = await reg.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(
-                  vapidRes.publicKey
-                ) as unknown as BufferSource,
-              });
-              const subJson = sub.toJSON();
-              if (subJson.endpoint && subJson.keys?.p256dh && subJson.keys?.auth) {
-                endpoint = subJson.endpoint;
-                p256dh = subJson.keys.p256dh;
-                auth = subJson.keys.auth;
-              }
-            } catch {
-              // Gunakan fallback subscription lokal jika browser dev memblokir push service
-            }
-          }
-        }
+    if (!checked) {
+      // Nonaktifkan jadwal tanpa menghapus langganan
+      setIsBusy(true);
+      try {
+        await apiFetch("/notifications/subscribe", {
+          method: "POST",
+          body: JSON.stringify({
+            reminderEnabled: false,
+            breakfastTime,
+            lunchTime,
+            dinnerTime,
+          }),
+        });
+        toast.info("Pengingat makan harian dinonaktifkan.");
+      } catch {
+        toast.error("Gagal memperbarui status pengingat.");
+      } finally {
+        setIsBusy(false);
+      }
+      return;
+    }
+
+    // Mengaktifkan: Minta izin browser jika belum granted
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      toast.error("Browser ini tidak mendukung notifikasi push.");
+      setReminderEnabled(false);
+      return;
+    }
+
+    if (!("serviceWorker" in navigator)) {
+      toast.error("Service Worker tidak tersedia di browser ini.");
+      setReminderEnabled(false);
+      return;
+    }
+
+    setIsBusy(true);
+    try {
+      const perm = await Notification.requestPermission();
+      setPermissionState(perm);
+
+      if (perm !== "granted") {
+        toast.error(
+          "Izin notifikasi ditolak. Aktifkan di pengaturan browser Anda."
+        );
+        setReminderEnabled(false);
+        return;
+      }
+
+      const reg = await navigator.serviceWorker.ready;
+      const vapidRes = await apiFetch<{ publicKey: string }>(
+        "/notifications/vapid-public-key"
+      );
+
+      if (!vapidRes.publicKey || !reg.pushManager) {
+        throw new Error("Layanan push notification tidak didukung perangkat ini.");
+      }
+
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(
+          vapidRes.publicKey
+        ) as unknown as BufferSource,
+      });
+
+      const subJson = sub.toJSON();
+      if (!subJson.endpoint || !subJson.keys?.p256dh || !subJson.keys?.auth) {
+        throw new Error("Gagal membuat langganan push yang valid.");
       }
 
       await apiFetch("/notifications/subscribe", {
         method: "POST",
         body: JSON.stringify({
-          endpoint,
-          keys: { p256dh, auth },
-          reminderEnabled,
+          endpoint: subJson.endpoint,
+          keys: {
+            p256dh: subJson.keys.p256dh,
+            auth: subJson.keys.auth,
+          },
+          reminderEnabled: true,
           breakfastTime,
           lunchTime,
           dinnerTime,
         }),
       });
 
-      setStatusMsg(
-        "Jadwal pengingat makan harian berhasil disimpan & diaktifkan!"
-      );
+      setHasSubscription(true);
+      toast.success("Pengingat makan berhasil diaktifkan!");
     } catch (err) {
-      setStatusMsg(
+      toast.error(
         err instanceof Error
           ? err.message
-          : "Gagal menyimpan jadwal pengingat makan."
+          : "Gagal mengaktifkan notifikasi push."
+      );
+      setReminderEnabled(false);
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const handleSaveTimes = async () => {
+    setIsBusy(true);
+    try {
+      await apiFetch("/notifications/subscribe", {
+        method: "POST",
+        body: JSON.stringify({
+          reminderEnabled,
+          breakfastTime,
+          lunchTime,
+          dinnerTime,
+        }),
+      });
+      toast.success("Jadwal jam makan berhasil diperbarui.");
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Gagal menyimpan jadwal jam makan."
       );
     } finally {
       setIsBusy(false);
@@ -133,20 +224,10 @@ export function PwaPushReminderCard() {
       const res = await apiFetch<{ message: string }>("/notifications/test", {
         method: "POST",
       });
-      setStatusMsg(res.message);
-      if (
-        typeof window !== "undefined" &&
-        "Notification" in window &&
-        Notification.permission === "granted"
-      ) {
-        new Notification("NutriSnap Meal Reminder", {
-          body: "Pengingat makan aktif! Jangan lupa catat kalori & proteinmu hari ini.",
-          icon: "/icons/icon.svg",
-        });
-      }
+      toast.success(res.message || "Notifikasi pengujian telah dikirim!");
     } catch (err) {
-      setStatusMsg(
-        err instanceof Error ? err.message : "Gagal mengirim test notifikasi."
+      toast.error(
+        err instanceof Error ? err.message : "Gagal memicu pengujian notifikasi."
       );
     } finally {
       setIsBusy(false);
@@ -154,80 +235,136 @@ export function PwaPushReminderCard() {
   };
 
   return (
-    <Card>
+    <Card id="pengingat" className="scroll-mt-20 rounded-2xl border-border bg-card">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2 font-display text-lg font-bold">
               <Bell className="h-5 w-5 text-primary" />
-              Pengingat Makan Terjadwal (PWA Push Notification)
+              Pengingat Makan Harian
             </CardTitle>
-            <CardDescription>
-              Mengirim notifikasi otomatis jika Anda belum mencatat makan pada jam makan harian.
+            <CardDescription className="text-xs text-muted-foreground">
+              Notifikasi push otomatis jika kamu belum mencatat sarapan, makan siang, atau makan malam.
             </CardDescription>
           </div>
-          <Badge variant={swReady ? "default" : "outline"} className="gap-1">
-            <Smartphone className="h-3.5 w-3.5" />
-            {swReady ? "PWA Ready" : "Web Mode"}
-          </Badge>
+          <div>
+            <Badge
+              variant={isStandalone ? "default" : "outline"}
+              className="gap-1.5 py-1"
+            >
+              <Smartphone className="h-3.5 w-3.5" />
+              {isStandalone ? "Aplikasi Terpasang" : "Web Browser"}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {statusMsg && (
-          <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-xs text-emerald-600 dark:text-emerald-300">
-            {statusMsg}
+        {/* Switch Pengaktif Utama */}
+        <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/30 p-3.5">
+          <div className="space-y-0.5">
+            <p className="text-xs font-semibold text-foreground">
+              Aktifkan Notifikasi Pengingat
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              Kirimkan pengingat jika sesi makan belum tercatat hingga jam yang ditentukan.
+            </p>
+          </div>
+          <Switch
+            checked={reminderEnabled}
+            onCheckedChange={(val) => void handleToggleReminder(val)}
+            disabled={isBusy}
+            aria-label="Aktifkan pengingat makan"
+          />
+        </div>
+
+        {permissionState === "denied" && (
+          <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              Izin notifikasi ditolak oleh peramban. Silakan buka pengaturan izin situs pada browser Anda untuk mengizinkan notifikasi.
+            </span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="space-y-1">
-            <label className="text-xs font-medium">Jam Sarapan</label>
-            <Input
-              type="time"
-              value={breakfastTime}
-              onChange={(e) => setBreakfastTime(e.target.value)}
-            />
+        {/* Zona Waktu & Jam Makan */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Globe className="h-3.5 w-3.5 text-primary" />
+            <span>Zona waktu pengingat:</span>
+            <strong className="text-foreground">{timezone}</strong>
           </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium">Jam Makan Siang</label>
-            <Input
-              type="time"
-              value={lunchTime}
-              onChange={(e) => setLunchTime(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium">Jam Makan Malam</label>
-            <Input
-              type="time"
-              value={dinnerTime}
-              onChange={(e) => setDinnerTime(e.target.value)}
-            />
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="space-y-1">
+              <label htmlFor="time-breakfast" className="text-xs font-medium text-foreground">
+                Jam Sarapan
+              </label>
+              <Input
+                id="time-breakfast"
+                type="time"
+                value={breakfastTime}
+                onChange={(e) => setBreakfastTime(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="time-lunch" className="text-xs font-medium text-foreground">
+                Jam Makan Siang
+              </label>
+              <Input
+                id="time-lunch"
+                type="time"
+                value={lunchTime}
+                onChange={(e) => setLunchTime(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="time-dinner" className="text-xs font-medium text-foreground">
+                Jam Makan Malam
+              </label>
+              <Input
+                id="time-dinner"
+                type="time"
+                value={dinnerTime}
+                onChange={(e) => setDinnerTime(e.target.value)}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
+        {/* Tombol Aksi Simpan Jadwal & Uji Notifikasi */}
+        <div className="flex flex-col gap-2 pt-1 sm:flex-row">
           <Button
             type="button"
-            onClick={() => void handleEnablePushAndSave()}
+            onClick={() => void handleSaveTimes()}
             disabled={isBusy}
-            className="flex-1 gap-2"
+            className="flex-1 gap-2 min-h-[44px]"
           >
-            <CheckCircle2 className="h-4 w-4" />
-            {isBusy ? "Menyimpan..." : "Aktifkan & Simpan Jadwal Pengingat"}
+            <Clock className="h-4 w-4" />
+            {isBusy ? "Menyimpan..." : "Simpan Jam Pengingat"}
           </Button>
+
           <Button
             type="button"
             variant="outline"
             onClick={() => void handleTriggerTestNotification()}
-            disabled={isBusy}
+            disabled={isBusy || !hasSubscription}
+            className="min-h-[44px]"
+            title={
+              !hasSubscription
+                ? "Aktifkan notifikasi terlebih dahulu untuk menguji"
+                : undefined
+            }
           >
             Uji Notifikasi
           </Button>
         </div>
+
+        {/* Catatan Perangkat iOS */}
+        <p className="text-[11px] text-muted-foreground">
+          💡 <strong>Pengguna iPhone/iPad:</strong> Notifikasi web push memerlukan iOS 16.4+ dan aplikasi harus ditambahkan ke Layar Utama (*Add to Home Screen*) terlebih dahulu.
+        </p>
       </CardContent>
     </Card>
   );
 }
-

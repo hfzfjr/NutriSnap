@@ -31,9 +31,9 @@ export function ThemeToggle() {
       aria-label="Ganti Tema Terang atau Gelap"
     >
       {isDark ? (
-        <Sun className="h-4 w-4 text-amber-400" />
+        <Sun className="h-4 w-4 text-accent" />
       ) : (
-        <Moon className="h-4 w-4 text-slate-700" />
+        <Moon className="h-4 w-4 text-foreground" />
       )}
     </Button>
   );
