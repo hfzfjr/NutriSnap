@@ -2,8 +2,10 @@
 
 import type { AiFoodScanResponse, MealItemInput } from "@nutrisnap/shared";
 import {
+  AlertTriangle,
   Camera,
   CheckCircle2,
+  KeyRound,
   Plus,
   Scale,
   Sparkles,
@@ -11,8 +13,10 @@ import {
   Upload,
   Utensils,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,9 +26,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { apiFetch } from "@/lib/api-client";
 import { todayISO } from "@/lib/date";
+import { formatGram, formatKcal, formatNumber } from "@/lib/format";
 import { compressFoodImageClient } from "@/lib/image-compress";
 
 const QUICK_INDONESIAN_FOODS = [
@@ -46,6 +52,12 @@ export default function DualMealLoggerPage() {
   const [mealType, setMealType] = React.useState<
     "breakfast" | "lunch" | "dinner" | "snack"
   >("lunch");
+
+  // API Key status check
+  const [apiKeyStatus, setApiKeyStatus] = React.useState<{
+    hasKey: boolean;
+    isValid: boolean;
+  } | null>(null);
 
   // AI Scanner states
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
@@ -70,10 +82,6 @@ export default function DualMealLoggerPage() {
 
   // Commit state
   const [isSaving, setIsSaving] = React.useState(false);
-  const [feedback, setFeedback] = React.useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
@@ -88,13 +96,16 @@ export default function DualMealLoggerPage() {
         setMealType(paramMealType);
       }
     }
+
+    apiFetch<{ hasKey: boolean; isValid: boolean }>("/apikey/status")
+      .then(setApiKeyStatus)
+      .catch(() => {});
   }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setFeedback(null);
     try {
       const compressed = await compressFoodImageClient(file, {
         maxDimension: 1280,
@@ -106,17 +117,15 @@ export default function DualMealLoggerPage() {
         afterKb: Math.max(1, Math.round(compressed.compressedSizeBytes / 1024)),
       });
     } catch (err) {
-      setFeedback({
-        type: "error",
-        text: err instanceof Error ? err.message : "Gagal memproses foto.",
-      });
+      toast.error(
+        err instanceof Error ? err.message : "Gagal memproses file foto."
+      );
     }
   };
 
   const handleRunGeminiScan = async () => {
     if (!previewUrl) return;
     setIsScanning(true);
-    setFeedback(null);
     try {
       const result = await apiFetch<AiFoodScanResponse>("/meals/scan-photo", {
         method: "POST",
@@ -129,14 +138,13 @@ export default function DualMealLoggerPage() {
       setScannedMealTitle(result.mealTitle);
       setScannedItems(result.items);
       setScannedNotes(result.nutritionNotes);
+      toast.success("Foto berhasil dianalisis oleh Gemini AI!");
     } catch (err) {
-      setFeedback({
-        type: "error",
-        text:
-          err instanceof Error
-            ? err.message
-            : "Gagal menganalisis foto makanan dengan Gemini AI.",
-      });
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Gagal menganalisis foto makanan dengan Gemini AI."
+      );
     } finally {
       setIsScanning(false);
     }
@@ -160,10 +168,29 @@ export default function DualMealLoggerPage() {
     );
   };
 
+  const handleUpdateScannedItemName = (index: number, newName: string) => {
+    setScannedItems((prev) =>
+      prev.map((item, idx) => (idx === index ? { ...item, foodName: newName } : item))
+    );
+  };
+
+  const handleAddManualComponent = () => {
+    setScannedItems((prev) => [
+      ...prev,
+      {
+        foodName: "Komponen Tambahan",
+        weightGrams: 100,
+        calories: 100,
+        proteinG: 5,
+        carbsG: 15,
+        fatG: 2,
+      },
+    ]);
+  };
+
   const handleSaveAiScannedMeal = async () => {
     if (scannedItems.length === 0) return;
     setIsSaving(true);
-    setFeedback(null);
     try {
       const todayStr = todayISO();
       await apiFetch("/meals", {
@@ -172,21 +199,17 @@ export default function DualMealLoggerPage() {
           loggedDate: todayStr,
           mealType,
           source: "ai_scan",
-          title: scannedMealTitle || "Makanan Hasil AI Scan",
+          title: scannedMealTitle.trim() || "Makanan Hasil AI Scan",
           aiNotes: scannedNotes,
           items: scannedItems,
         }),
       });
-      setFeedback({
-        type: "success",
-        text: "Log makanan hasil AI Scan berhasil disimpan ke jurnal harian!",
-      });
-      setTimeout(() => router.push("/dashboard"), 700);
+      toast.success("Catatan makanan hasil scan berhasil disimpan!");
+      setTimeout(() => router.push("/dashboard"), 500);
     } catch (err) {
-      setFeedback({
-        type: "error",
-        text: err instanceof Error ? err.message : "Gagal menyimpan log makanan.",
-      });
+      toast.error(
+        err instanceof Error ? err.message : "Gagal menyimpan log makanan."
+      );
     } finally {
       setIsSaving(false);
     }
@@ -201,7 +224,6 @@ export default function DualMealLoggerPage() {
     if (!queryName || queryWeight <= 0) return;
 
     setIsEstimating(true);
-    setFeedback(null);
     try {
       const res = await apiFetch<{
         foodName: string;
@@ -222,12 +244,11 @@ export default function DualMealLoggerPage() {
       setManualProteinG(res.proteinG);
       setManualCarbsG(res.carbsG);
       setManualFatG(res.fatG);
+      toast.success(`Estimasi nutrisi ${res.foodName} (${queryWeight}g) berhasil.`);
     } catch (err) {
-      setFeedback({
-        type: "error",
-        text:
-          err instanceof Error ? err.message : "Gagal menghitung estimasi nutrisi.",
-      });
+      toast.error(
+        err instanceof Error ? err.message : "Gagal menghitung estimasi nutrisi."
+      );
     } finally {
       setIsEstimating(false);
     }
@@ -235,10 +256,12 @@ export default function DualMealLoggerPage() {
 
   const handleSaveManualMeal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!manualFoodName.trim() || manualWeightGrams <= 0) return;
+    if (!manualFoodName.trim() || manualWeightGrams <= 0) {
+      toast.error("Nama makanan dan berat harus diisi.");
+      return;
+    }
 
     setIsSaving(true);
-    setFeedback(null);
     try {
       const todayStr = todayISO();
       await apiFetch("/meals", {
@@ -260,16 +283,12 @@ export default function DualMealLoggerPage() {
           ],
         }),
       });
-      setFeedback({
-        type: "success",
-        text: `Berhasil mencatat ${manualFoodName} (${manualWeightGrams}g) ke jurnal harian!`,
-      });
-      setTimeout(() => router.push("/dashboard"), 700);
+      toast.success(`Berhasil mencatat ${manualFoodName} (${manualWeightGrams}g)!`);
+      setTimeout(() => router.push("/dashboard"), 500);
     } catch (err) {
-      setFeedback({
-        type: "error",
-        text: err instanceof Error ? err.message : "Gagal menyimpan log manual.",
-      });
+      toast.error(
+        err instanceof Error ? err.message : "Gagal menyimpan log manual."
+      );
     } finally {
       setIsSaving(false);
     }
@@ -278,38 +297,61 @@ export default function DualMealLoggerPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Catat Asupan Nutrisi
+        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+          Catat Makanan Harian
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Gunakan AI Food Photo Scanner (Gemini Multimodal) atau Input Manual (Nama Makanan + Berat Gram).
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Gunakan AI Vision untuk mengekstrak makronutrisi dari foto piring atau
+          masukkan nama makanan secara manual.
         </p>
       </div>
 
-      {/* Pilihan Waktu Makan */}
-      <div className="grid grid-cols-4 gap-2">
-        {(
-          [
-            ["breakfast", "Sarapan"],
-            ["lunch", "Makan Siang"],
-            ["dinner", "Makan Malam"],
-            ["snack", "Camilan"],
-          ] as const
-        ).map(([type, label]) => (
-          <Button
-            key={type}
-            type="button"
-            size="sm"
-            variant={mealType === type ? "default" : "outline"}
-            onClick={() => setMealType(type)}
-          >
-            {label}
-          </Button>
-        ))}
+      {/* Banner Kunci Gemini API (BYOK) jika belum diatur */}
+      {apiKeyStatus && !apiKeyStatus.hasKey && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-status-under/40 bg-status-under/10 p-4 text-xs">
+          <div className="flex items-center gap-2.5 text-foreground font-medium">
+            <KeyRound className="h-4 w-4 text-status-under shrink-0" />
+            <span>
+              Kunci Google Gemini API belum diatur. Analisis foto membutuhkan kunci
+              pribadi gratis dari Google AI Studio.
+            </span>
+          </div>
+          <Link href="/settings" className="shrink-0">
+            <Button size="sm" variant="outline" className="h-8 text-xs border-status-under/40 hover:bg-status-under/20">
+              Atur Kunci Sekarang
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      {/* Sesi Makan Selector */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-semibold text-foreground">Sesi Makan:</span>
+        <div className="flex flex-wrap gap-1.5">
+          {(
+            [
+              ["breakfast", "Sarapan Pagi"],
+              ["lunch", "Makan Siang"],
+              ["dinner", "Makan Malam"],
+              ["snack", "Camilan / Snack"],
+            ] as const
+          ).map(([key, label]) => (
+            <Button
+              key={key}
+              type="button"
+              size="sm"
+              variant={mealType === key ? "default" : "outline"}
+              onClick={() => setMealType(key)}
+              className="h-8 text-xs font-medium"
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
       </div>
 
-      {/* Segmented Dual Mode Switcher */}
-      <div className="grid grid-cols-2 rounded-2xl bg-secondary p-1">
+      {/* Tab Switcher */}
+      <div className="grid grid-cols-2 gap-2 rounded-2xl bg-secondary/80 p-1 border border-border">
         <button
           type="button"
           onClick={() => setActiveTab("ai_scan")}
@@ -320,7 +362,7 @@ export default function DualMealLoggerPage() {
           }`}
         >
           <Camera className="h-4 w-4 text-primary" />
-          AI Food Photo Scanner
+          AI Food Scanner (Foto)
         </button>
         <button
           type="button"
@@ -336,51 +378,61 @@ export default function DualMealLoggerPage() {
         </button>
       </div>
 
-      {feedback && (
-        <div
-          className={`rounded-xl border p-3 text-xs ${
-            feedback.type === "success"
-              ? "border-status-ontrack/40 bg-status-ontrack/10 text-status-ontrack font-medium"
-              : "border-destructive/40 bg-destructive/10 text-destructive"
-          }`}
-        >
-          {feedback.text}
-        </div>
-      )}
-
       {/* TAB 1: AI FOOD PHOTO SCANNER */}
       {activeTab === "ai_scan" && (
-        <Card>
+        <Card className="border-border shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <Sparkles className="h-5 w-5 text-primary" />
               AI Food Photo Scanner (Gemini Multimodal)
             </CardTitle>
             <CardDescription>
-              Foto piring Anda akan dikompresi otomatis (&le;1280px WebP) sebelum diekstrak nutrisinya.
+              Foto piring kamu akan dikompresi otomatis (&le;1280px WebP) sebelum diekstrak nutrisinya.
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-4">
-            <label className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-secondary/40 p-6 text-center cursor-pointer hover:border-primary/60 transition-colors">
-              <Upload className="h-8 w-8 text-primary" />
-              <div className="space-y-0.5">
-                <span className="text-sm font-semibold block">
-                  Ambil Foto Kamera atau Pilih dari Galeri
-                </span>
-                <span className="text-xs text-muted-foreground block">
-                  Mendukung JPEG, PNG, WebP (Otomatis dikompresi di perangkat)
-                </span>
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
+            {/* Dwi-Aksi Kamera HP vs Galeri */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="flex items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 p-4 text-center cursor-pointer hover:bg-primary/10 transition-colors">
+                <Camera className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <span className="text-xs font-semibold text-foreground block">
+                    Ambil Foto Kamera
+                  </span>
+                  <span className="text-[10px] text-muted-foreground block">
+                    Buka kamera ponsel langsung
+                  </span>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
 
+              <label className="flex items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed border-border bg-secondary/50 p-4 text-center cursor-pointer hover:bg-secondary/80 transition-colors">
+                <Upload className="h-5 w-5 text-muted-foreground" />
+                <div className="text-left">
+                  <span className="text-xs font-semibold text-foreground block">
+                    Pilih dari Galeri
+                  </span>
+                  <span className="text-[10px] text-muted-foreground block">
+                    Pilih foto piring dari galeri HP
+                  </span>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            {/* Preview & Kompresi */}
             {previewUrl && (
               <div className="space-y-3">
                 <div className="relative overflow-hidden rounded-2xl border border-border max-h-64 flex items-center justify-center bg-black/20">
@@ -392,32 +444,31 @@ export default function DualMealLoggerPage() {
                 </div>
                 {compressionStats && (
                   <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span>Optimasi Gambar Client-Side:</span>
+                    <span>Kompresi Gambar di Perangkat:</span>
                     <Badge variant="default">
-                      {compressionStats.beforeKb} KB &rarr;{" "}
-                      {compressionStats.afterKb} KB
+                      {compressionStats.beforeKb} KB &rarr; {compressionStats.afterKb} KB
                     </Badge>
                   </div>
                 )}
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium">
-                Catatan Konteks Opsional (Membantu Akurasi AI)
-              </label>
+            <Field
+              label="Catatan Konteks Opsional (Membantu Akurasi AI)"
+              helperText="Misal: 'Dada ayam tanpa kulit, nasi setengah porsi'"
+            >
               <Input
                 value={userContextNote}
                 onChange={(e) => setUserContextNote(e.target.value)}
-                placeholder="Contoh: Nasi 200g dengan dada ayam bakar tanpa kulit"
+                placeholder="Tuliskan detail khusus makanan jika ada..."
               />
-            </div>
+            </Field>
 
             <Button
               type="button"
-              onClick={handleRunGeminiScan}
+              onClick={() => void handleRunGeminiScan()}
               disabled={!previewUrl || isScanning}
-              className="w-full gap-2"
+              className="w-full gap-2 font-semibold shadow-sm"
             >
               <Camera className="h-4 w-4" />
               {isScanning
@@ -427,62 +478,97 @@ export default function DualMealLoggerPage() {
 
             {/* Editable Confirmation Result List */}
             {scannedItems.length > 0 && (
-              <div className="space-y-3 pt-3 border-t border-border">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold">
-                    Hasil Deteksi: {scannedMealTitle}
-                  </h4>
-                  <Badge variant="surplus">Editable Review</Badge>
+              <div className="space-y-3 pt-4 border-t border-border">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Judul Menu Makanan:
+                  </label>
+                  <Input
+                    value={scannedMealTitle}
+                    onChange={(e) => setScannedMealTitle(e.target.value)}
+                    placeholder="Judul makanan..."
+                  />
                 </div>
 
                 {scannedNotes && (
-                  <p className="rounded-xl bg-primary/10 p-2.5 text-xs text-primary">
+                  <p className="rounded-xl bg-primary/10 border border-primary/20 p-3 text-xs text-primary leading-relaxed">
                     {scannedNotes}
                   </p>
                 )}
 
-                <div className="space-y-2">
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+                    <span>Daftar Komponen Makanan:</span>
+                    <button
+                      type="button"
+                      onClick={handleAddManualComponent}
+                      className="inline-flex items-center gap-1 text-primary hover:underline text-xs"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Tambah Komponen
+                    </button>
+                  </div>
+
                   {scannedItems.map((item, idx) => (
                     <div
-                      key={`${item.foodName}-${idx}`}
-                      className="flex flex-col gap-2 rounded-xl border border-border p-3 sm:flex-row sm:items-center sm:justify-between"
+                      key={idx}
+                      className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <div>
-                        <p className="text-sm font-semibold">{item.foodName}</p>
-                        <p className="text-xs text-muted-foreground tabular-nums">
-                          {item.calories} kcal •{" "}
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <Input
+                          value={item.foodName}
+                          onChange={(e) => handleUpdateScannedItemName(idx, e.target.value)}
+                          className="h-8 text-xs font-semibold"
+                        />
+                        <p className="text-[11px] text-muted-foreground tabular-nums">
+                          {formatNumber(item.calories)} kcal •{" "}
                           <strong className="text-macro-protein font-semibold">
-                            {item.proteinG}g Protein
+                            {formatGram(item.proteinG)} Protein
                           </strong>{" "}
-                          • {item.carbsG}g Karbo • {item.fatG}g Lemak
+                          • {formatGram(item.carbsG)} Karbo • {formatGram(item.fatG)} Lemak
                         </p>
                       </div>
+
                       <div className="flex items-center gap-2">
-                        <div className="w-24">
+                        <div className="flex gap-1">
+                          {[100, 150, 200].map((preset) => (
+                            <button
+                              key={preset}
+                              type="button"
+                              onClick={() => handleUpdateScannedItemWeight(idx, preset)}
+                              className={`px-2 py-1 rounded text-[11px] border transition-colors ${
+                                item.weightGrams === preset
+                                  ? "bg-primary text-primary-foreground border-primary font-semibold"
+                                  : "bg-secondary text-muted-foreground hover:text-foreground border-border"
+                              }`}
+                            >
+                              {preset}g
+                            </button>
+                          ))}
+                        </div>
+                        <div className="w-20">
                           <Input
                             type="number"
+                            min={1}
+                            max={5000}
                             value={item.weightGrams}
                             onChange={(e) =>
-                              handleUpdateScannedItemWeight(
-                                idx,
-                                Number(e.target.value)
-                              )
+                              handleUpdateScannedItemWeight(idx, Number(e.target.value))
                             }
-                            aria-label="Berat gram"
+                            className="h-8 text-xs"
                           />
                         </div>
-                        <span className="text-xs text-muted-foreground">g</span>
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
                           onClick={() =>
-                            setScannedItems((prev) =>
-                              prev.filter((_, i) => i !== idx)
-                            )
+                            setScannedItems((prev) => prev.filter((_, i) => i !== idx))
                           }
+                          aria-label={`Hapus ${item.foodName}`}
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -491,12 +577,12 @@ export default function DualMealLoggerPage() {
 
                 <Button
                   type="button"
-                  onClick={handleSaveAiScannedMeal}
+                  onClick={() => void handleSaveAiScannedMeal()}
                   disabled={isSaving}
-                  className="w-full gap-2"
+                  className="w-full gap-2 font-semibold shadow-sm mt-3"
                 >
                   <CheckCircle2 className="h-4 w-4" />
-                  {isSaving ? "Menyimpan..." : "Simpan ke Log Harian"}
+                  {isSaving ? "Menyimpan Catatan..." : "Simpan ke Jurnal Harian"}
                 </Button>
               </div>
             )}
@@ -504,23 +590,23 @@ export default function DualMealLoggerPage() {
         </Card>
       )}
 
-      {/* TAB 2: MANUAL INPUT FORM (FOOD NAME + WEIGHT IN GRAMS) */}
+      {/* TAB 2: MANUAL INPUT FORM */}
       {activeTab === "manual" && (
-        <Card>
+        <Card className="border-border shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <Utensils className="h-5 w-5 text-primary" />
               Input Manual Makanan & Berat (Gram)
             </CardTitle>
             <CardDescription>
-              Pilih dari saran makanan populer atau ketik nama makanan beserta beratnya dalam gram.
+              Pilih dari saran makanan lokal populer atau ketik nama makanan beserta berat gramasinya.
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <span className="text-xs font-medium text-muted-foreground">
-                Pilihan Cepat Makanan Populer:
+              <span className="text-xs font-semibold text-muted-foreground">
+                Pilihan Cepat Makanan Nusantara:
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {QUICK_INDONESIAN_FOODS.map((food) => (
@@ -531,7 +617,7 @@ export default function DualMealLoggerPage() {
                       setManualFoodName(food);
                       void handleEstimateManualMacros(food, manualWeightGrams);
                     }}
-                    className="rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs font-medium hover:border-primary hover:text-primary transition-colors"
+                    className="rounded-xl border border-border bg-secondary/70 px-2.5 py-1 text-xs text-foreground hover:bg-secondary hover:border-primary/40 transition-colors"
                   >
                     + {food}
                   </button>
@@ -541,29 +627,28 @@ export default function DualMealLoggerPage() {
 
             <form onSubmit={handleSaveManualMeal} className="space-y-4">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div className="sm:col-span-2 space-y-1.5">
-                  <label className="text-xs font-medium">Nama Makanan</label>
-                  <Input
-                    required
-                    value={manualFoodName}
-                    onChange={(e) => setManualFoodName(e.target.value)}
-                    placeholder="Contoh: Dada Ayam Panggang"
-                  />
+                <div className="sm:col-span-2">
+                  <Field label="Nama Makanan" required>
+                    <Input
+                      required
+                      value={manualFoodName}
+                      onChange={(e) => setManualFoodName(e.target.value)}
+                      placeholder="Contoh: Dada Ayam Panggang"
+                    />
+                  </Field>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium">Berat (Gram)</label>
-                  <Input
-                    type="number"
-                    required
-                    min={1}
-                    max={5000}
-                    value={manualWeightGrams}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      setManualWeightGrams(val);
-                    }}
-                  />
-                  <div className="flex gap-1 pt-0.5">
+                <div>
+                  <Field label="Berat (Gram)" required>
+                    <Input
+                      type="number"
+                      required
+                      min={1}
+                      max={5000}
+                      value={manualWeightGrams}
+                      onChange={(e) => setManualWeightGrams(Number(e.target.value))}
+                    />
+                  </Field>
+                  <div className="flex gap-1 pt-1.5">
                     {[100, 150, 200, 250].map((g) => (
                       <button
                         key={g}
@@ -577,7 +662,7 @@ export default function DualMealLoggerPage() {
                         className={`px-1.5 py-0.5 rounded text-[10px] border transition-colors ${
                           manualWeightGrams === g
                             ? "bg-primary text-primary-foreground border-primary font-semibold"
-                            : "bg-secondary/70 text-muted-foreground hover:text-foreground border-border"
+                            : "bg-secondary text-muted-foreground hover:text-foreground border-border"
                         }`}
                       >
                         {g}g
@@ -591,32 +676,26 @@ export default function DualMealLoggerPage() {
                 type="button"
                 variant="secondary"
                 size="sm"
-                className="w-full gap-2"
+                className="w-full gap-2 border border-border"
                 onClick={() => void handleEstimateManualMacros()}
                 disabled={isEstimating || !manualFoodName.trim()}
               >
                 <Sparkles className="h-4 w-4 text-primary" />
                 {isEstimating
                   ? "Menghitung Makro..."
-                  : "Hitung Kalori & Protein Otomatis dari Gramasi"}
+                  : "Hitung Kalori & Makro Otomatis"}
               </Button>
 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-primary">
-                    Kalori (kcal)
-                  </label>
+                <Field label="Kalori (kcal)">
                   <Input
                     type="number"
                     min={0}
                     value={manualCalories}
                     onChange={(e) => setManualCalories(Number(e.target.value))}
                   />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-macro-protein">
-                    Protein (g)
-                  </label>
+                </Field>
+                <Field label="Protein (g)">
                   <Input
                     type="number"
                     step="0.1"
@@ -624,11 +703,8 @@ export default function DualMealLoggerPage() {
                     value={manualProteinG}
                     onChange={(e) => setManualProteinG(Number(e.target.value))}
                   />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-macro-carbs">
-                    Karbohidrat (g)
-                  </label>
+                </Field>
+                <Field label="Karbohidrat (g)">
                   <Input
                     type="number"
                     step="0.1"
@@ -636,11 +712,8 @@ export default function DualMealLoggerPage() {
                     value={manualCarbsG}
                     onChange={(e) => setManualCarbsG(Number(e.target.value))}
                   />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-macro-fat">
-                    Lemak (g)
-                  </label>
+                </Field>
+                <Field label="Lemak (g)">
                   <Input
                     type="number"
                     step="0.1"
@@ -648,16 +721,16 @@ export default function DualMealLoggerPage() {
                     value={manualFatG}
                     onChange={(e) => setManualFatG(Number(e.target.value))}
                   />
-                </div>
+                </Field>
               </div>
 
               <Button
                 type="submit"
-                className="w-full gap-2"
-                disabled={isSaving || !manualFoodName.trim()}
+                disabled={isSaving || !manualFoodName.trim() || manualWeightGrams <= 0}
+                className="w-full gap-2 font-semibold shadow-sm"
               >
-                <Plus className="h-4 w-4" />
-                {isSaving ? "Menyimpan..." : "Simpan Log Makanan Manual"}
+                <CheckCircle2 className="h-4 w-4" />
+                {isSaving ? "Menyimpan..." : "Simpan Catatan Manual"}
               </Button>
             </form>
           </CardContent>
@@ -666,4 +739,3 @@ export default function DualMealLoggerPage() {
     </div>
   );
 }
-
