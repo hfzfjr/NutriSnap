@@ -619,6 +619,24 @@ export const repository = {
     return memoryStore.weightLogs.get(userId) ?? [];
   },
 
+  async deleteWeightLog(userId: string, id: string): Promise<boolean> {
+    if (await ensureDatabaseReady()) {
+      const res = await db
+        .delete(weightLogs)
+        .where(and(eq(weightLogs.userId, userId), eq(weightLogs.id, id)))
+        .returning();
+      return res.length > 0;
+    }
+    const list = memoryStore.weightLogs.get(userId) ?? [];
+    const idx = list.findIndex((item) => item.id === id);
+    if (idx >= 0) {
+      list.splice(idx, 1);
+      memoryStore.weightLogs.set(userId, list);
+      return true;
+    }
+    return false;
+  },
+
   async createMealLog(
     userId: string,
     input: {
@@ -845,6 +863,73 @@ export const repository = {
     }
     memoryStore.mealLogs.delete(mealLogId);
     return true;
+  },
+
+  async updateMealLog(
+    userId: string,
+    mealLogId: string,
+    input: {
+      title?: string;
+      mealType?: "breakfast" | "lunch" | "dinner" | "snack";
+      aiNotes?: string | null;
+    }
+  ): Promise<MealLogRecord | null> {
+    if (await ensureDatabaseReady()) {
+      const updateData: Record<string, unknown> = {};
+      if (input.title !== undefined) updateData.title = input.title;
+      if (input.mealType !== undefined) updateData.mealType = input.mealType;
+      if (input.aiNotes !== undefined) updateData.aiNotes = input.aiNotes;
+
+      const [updated] = await db
+        .update(mealLogs)
+        .set(updateData)
+        .where(and(eq(mealLogs.id, mealLogId), eq(mealLogs.userId, userId)))
+        .returning();
+
+      if (!updated) return null;
+
+      const items = await db
+        .select()
+        .from(mealItems)
+        .where(eq(mealItems.mealLogId, updated.id));
+
+      return {
+        id: updated.id,
+        userId: updated.userId,
+        loggedDate: updated.loggedDate,
+        mealType: updated.mealType as "breakfast" | "lunch" | "dinner" | "snack",
+        source: updated.source as "ai_scan" | "manual",
+        title: updated.title,
+        imageUrl: updated.imageUrl,
+        aiNotes: updated.aiNotes,
+        totalCalories: updated.totalCalories,
+        totalProteinG: Number(updated.totalProteinG),
+        totalCarbsG: Number(updated.totalCarbsG),
+        totalFatG: Number(updated.totalFatG),
+        loggedAt: updated.loggedAt,
+        items: items.map((it) => ({
+          id: it.id,
+          mealLogId: it.mealLogId,
+          foodName: it.foodName,
+          weightGrams: Number(it.weightGrams),
+          calories: it.calories,
+          proteinG: Number(it.proteinG),
+          carbsG: Number(it.carbsG),
+          fatG: Number(it.fatG),
+          confidenceScore: it.confidenceScore ? Number(it.confidenceScore) : null,
+        })),
+      };
+    }
+
+    const existing = memoryStore.mealLogs.get(mealLogId);
+    if (!existing || existing.userId !== userId) return null;
+
+    if (input.title !== undefined) existing.title = input.title;
+    if (input.mealType !== undefined) existing.mealType = input.mealType;
+    if (input.aiNotes !== undefined) existing.aiNotes = input.aiNotes;
+
+    memoryStore.mealLogs.set(mealLogId, existing);
+    return existing;
   },
 
   async getChatHistory(userId: string): Promise<ChatMessageRecord[]> {

@@ -20,6 +20,7 @@ Sebelum menulis atau memodifikasi kode, selalu rujuk dokumen yang relevan di fol
 | [`docs/ARCHITECTURE.md`](file:///d:/CODING/PROJECT/nutrisnap/docs/ARCHITECTURE.md) | Topologi Monorepo Coolify, Skema Database ERD, Enkripsi BYOK `AES-256-GCM`, & Pipeline Gemini AI. | Saat menyentuh `apps/backend`, database, enkripsi, atau konfigurasi Docker/Coolify. |
 | [`docs/API_CONTRACT.md`](file:///d:/CODING/PROJECT/nutrisnap/docs/API_CONTRACT.md) | Kontrak REST API antara `apps/frontend` dan `apps/backend`, termasuk JSON Schema Gemini. | Saat membuat/mengubah endpoint di backend atau data fetcher di frontend. |
 | [`docs/SPRINT.md`](file:///d:/CODING/PROJECT/nutrisnap/docs/SPRINT.md) | Rencana Sprint Agile (Sprint 0 – Sprint 5), Backlog, Story Points, & Definition of Done (DoD). | Saat memulai sesi pengerjaan sprint atau merencanakan iterasi berikutnya. |
+| [`docs/REFACTOR.md`](file:///d:/CODING/PROJECT/nutrisnap/docs/REFACTOR.md) | Rencana refactor UI/UX, konten, dan integritas data per fase (Sprint 6), lengkap dengan temuan audit & daftar verifikasi backend. | Saat mengerjakan Sprint 6 atau menyentuh tampilan/teks di `apps/frontend`. |
 | [`docs/PROGRESS_TRACKER.md`](file:///d:/CODING/PROJECT/nutrisnap/docs/PROGRESS_TRACKER.md) | Live Agile Board, Status Task (`TODO`, `IN_PROGRESS`, `DONE`), & Changelog. | **Wajib diperbarui** setiap kali memulai dan menyelesaikan suatu task. |
 
 ---
@@ -88,6 +89,7 @@ nutrisnap/
 - **Responsive Navigation:**
   - Pada layar `< 768px` (mobile/PWA): Wajib menampilkan **Fixed Bottom Navigation Bar** dengan tombol aksi utama Scan/Log di tengah dan memperhatikan `pb-[env(safe-area-inset-bottom)]` untuk layar iOS modern. Sidebar desktop harus disembunyikan (`hidden md:flex`).
   - Pada layar `>= 768px` (tablet/desktop): Menampilkan **Left Sidebar Navigation** dan menyembunyikan Bottom Navigation Bar (`md:hidden`).
+- **Integritas Data & Bahasa (v1.1):** Dilarang menaruh data contoh/dummy, akun demo, atau nilai fallback angka di jalur produksi (`apps/frontend/src`); gunakan skeleton, *empty state*, dan pesan galat. Frontend tidak boleh membuat sesi otomatis. UI berbahasa Indonesia (sapaan "kamu") mengikuti glosarium `docs/DESIGN.md` §7; jargon teknis hanya di blok "Detail teknis". Tanggal "hari ini" dihitung lewat `lib/date.ts` (zona waktu pengguna), bukan `toISOString()`.
 - **Theming:** Semua komponen wajib mendukung **Light Mode** dan **Dark Mode** secara mulus menggunakan CSS variables Tailwind / Shadcn UI (`bg-background`, `text-foreground`, `bg-card`, `text-primary`, dll.), hindari *hardcoded hex color* yang merusak kontras di salah satu tema.
 - **Image Optimization sebelum Upload:** Semua foto makanan yang diambil dari kamera/galeri HP pengguna harus dikompresi di sisi client (`maxWidthOrHeight: 1280`, format `image/webp` atau `image/jpeg`, `quality: 0.8`) sebelum dikirim ke `apps/backend` agar waktu scan cepat (< 3 detik) dan hemat bandwidth/storage.
 

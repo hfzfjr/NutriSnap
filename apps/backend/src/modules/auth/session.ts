@@ -63,6 +63,7 @@ export function setSessionCookie(reply: FastifyReply, token: string): void {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
     sameSite: "lax",
+    domain: process.env.COOKIE_DOMAIN || undefined,
     maxAge: 60 * 60 * 24 * 30,
   });
 }
@@ -70,6 +71,7 @@ export function setSessionCookie(reply: FastifyReply, token: string): void {
 export function clearSessionCookie(reply: FastifyReply): void {
   reply.clearCookie(SESSION_COOKIE_NAME, {
     path: "/",
+    domain: process.env.COOKIE_DOMAIN || undefined,
   });
 }
 

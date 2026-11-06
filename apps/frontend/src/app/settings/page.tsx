@@ -1,20 +1,22 @@
 "use client";
 
 import {
+  Bell,
+  KeyRound,
   LogOut,
   Palette,
-  Settings,
   ShieldCheck,
   Target,
+  User,
   UserCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { toast } from "sonner";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { PwaPushReminderCard } from "@/components/pwa/pwa-manager";
 import { ByokKeyCard } from "@/components/settings/byok-key-card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,7 +25,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { GoalChip } from "@/components/ui/goal-chip";
+import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch, setStoredAuthToken } from "@/lib/api-client";
+import { formatKcal, formatKg } from "@/lib/format";
 
 interface ProfileSummary {
   profile: {
@@ -50,121 +55,152 @@ export default function SettingsPage() {
     email: string;
   } | null>(null);
   const [profile, setProfile] = React.useState<ProfileSummary["profile"]>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
-    void apiFetch<{
-      user: { name: string; email: string };
-    }>("/auth/me")
-      .then((res) => setUserInfo(res.user))
-      .catch(() => {});
-
-    void apiFetch<ProfileSummary>("/profile")
-      .then((res) => setProfile(res.profile))
-      .catch(() => {});
+    Promise.all([
+      apiFetch<{ user: { name: string; email: string } }>("/auth/me")
+        .then((res) => setUserInfo(res.user))
+        .catch(() => {}),
+      apiFetch<ProfileSummary>("/profile")
+        .then((res) => setProfile(res.profile))
+        .catch(() => {}),
+    ]).finally(() => {
+      setIsLoading(false);
+    });
   }, []);
 
   const handleLogout = async () => {
     try {
       await apiFetch("/auth/logout", { method: "POST" });
     } catch {
-      // Abaikan jika sudah logout
+      // Abaikan jika token kedaluwarsa
     }
     setStoredAuthToken(null);
+    toast.info("Kamu telah keluar dari sesi NutriSnap.");
     router.push("/login");
   };
 
-  return (
-    <div className="space-y-6 pb-8">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+  const navItems = [
+    { label: "Profil & Target", href: "#profil", icon: Target },
+    { label: "API Key Gemini", href: "#api-key", icon: KeyRound },
+    { label: "Pengingat Makan", href: "#pengingat", icon: Bell },
+    { label: "Tampilan", href: "#tampilan", icon: Palette },
+    { label: "Akun", href: "#akun", icon: User },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
         <div>
-          <Badge variant="outline" className="mb-1.5 gap-1.5">
-            <Settings className="h-3.5 w-3.5 text-primary" />
-            Pusat Kendali Akun & Keamanan
-          </Badge>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Pengaturan & BYOK Vault
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Kelola kunci Gemini AI terenkripsi, jadwal pengingat makan, target
-            kalori, dan preferensi tema.
-          </p>
+          <Skeleton className="h-8 w-44 rounded-md" />
+          <Skeleton className="mt-2 h-4 w-72 rounded-md" />
         </div>
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void handleLogout()}
-            className="gap-1.5"
-          >
-            <LogOut className="h-4 w-4" />
-            Keluar Sesi
-          </Button>
-        </div>
+        <Skeleton className="h-48 rounded-2xl" />
+        <Skeleton className="h-56 rounded-2xl" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 pb-12">
+      <div>
+        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+          Pengaturan
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Kelola target fisik, kunci API Gemini, jadwal pengingat makan, dan preferensi akunmu.
+        </p>
       </div>
 
-      {/* Ringkasan Profil & Target Nutrisi */}
-      <Card>
+      {/* Navigasi Lompat Anchor (Scrollable di Mobile) */}
+      <nav
+        aria-label="Navigasi Pengaturan Cepat"
+        className="flex gap-2 overflow-x-auto pb-1 text-xs scrollbar-none"
+      >
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <a
+              key={item.href}
+              href={item.href}
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 font-medium text-foreground transition-colors hover:bg-secondary/60 hover:text-primary"
+            >
+              <Icon className="h-3.5 w-3.5 text-primary" />
+              <span>{item.label}</span>
+            </a>
+          );
+        })}
+      </nav>
+
+      {/* 1. Ringkasan Profil & Target Nutrisi */}
+      <Card id="profil" className="scroll-mt-20 rounded-2xl border-border bg-card">
         <CardHeader className="pb-3">
-          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-            <div>
-              <CardTitle className="flex items-center gap-2">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+            <div className="space-y-1">
+              <CardTitle className="flex items-center gap-2 font-display text-lg font-bold">
                 <Target className="h-5 w-5 text-primary" />
-                Profil Fisik & Target Kalori Harian
+                Profil Fisik & Target Nutrisi
               </CardTitle>
-              <CardDescription>
-                {userInfo
-                  ? `${userInfo.name} (${userInfo.email})`
-                  : "Kalkulasi otomatis berbasis rumus Mifflin-St Jeor"}
+              <CardDescription className="text-xs text-muted-foreground">
+                Kalkulasi kebutuhan kalori dan makronutrisi harian berdasarkan rumus Mifflin-St Jeor.
               </CardDescription>
             </div>
             <Link href="/onboarding">
-              <Button variant="outline" size="sm" className="gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 min-h-[44px]"
+              >
                 <UserCheck className="h-4 w-4" />
-                Ubah Target Berat / Kalori
+                Ubah Target Tubuh
               </Button>
             </Link>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           {profile ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-xl border bg-muted/30 p-3">
-                <p className="text-xs text-muted-foreground">Mode Program</p>
-                <p className="mt-1 text-base font-bold uppercase text-primary">
-                  {profile.goalType}
-                </p>
+            <div className="space-y-4">
+              {/* Program GoalChip */}
+              <div className="max-w-md">
+                <GoalChip goal={profile.goalType} selected={true} />
               </div>
-              <div className="rounded-xl border bg-muted/30 p-3">
-                <p className="text-xs text-muted-foreground">
-                  Berat Saat Ini → Target
-                </p>
-                <p className="mt-1 font-mono text-base font-bold">
-                  {profile.currentWeightKg} kg → {profile.targetWeightKg} kg
-                </p>
-              </div>
-              <div className="rounded-xl border bg-muted/30 p-3">
-                <p className="text-xs text-muted-foreground">
-                  Target Kalori Harian
-                </p>
-                <p className="mt-1 font-mono text-base font-bold">
-                  {profile.targetDailyCalories} kkal
-                </p>
-              </div>
-              <div className="rounded-xl border bg-muted/30 p-3">
-                <p className="text-xs text-muted-foreground">
-                  Target Makro (P / C / F)
-                </p>
-                <p className="mt-1 font-mono text-sm font-semibold">
-                  {profile.targetProteinG}g / {profile.targetCarbsG}g /{" "}
-                  {profile.targetFatG}g
-                </p>
+
+              {/* Grid Metrik Tubuh & Target */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-xl border border-border bg-secondary/30 p-3">
+                  <p className="text-[11px] text-muted-foreground">Berat Sekarang → Target</p>
+                  <p className="mt-1 text-sm font-semibold tabular-nums text-foreground">
+                    {formatKg(profile.currentWeightKg)} → {formatKg(profile.targetWeightKg)}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-border bg-secondary/30 p-3">
+                  <p className="text-[11px] text-muted-foreground">Target Kalori Harian</p>
+                  <p className="mt-1 text-sm font-semibold tabular-nums text-foreground">
+                    {formatKcal(profile.targetDailyCalories)}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-border bg-secondary/30 p-3">
+                  <p className="text-[11px] text-muted-foreground">Target Protein</p>
+                  <p className="mt-1 text-sm font-semibold tabular-nums text-foreground">
+                    {profile.targetProteinG} g/hari
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-border bg-secondary/30 p-3">
+                  <p className="text-[11px] text-muted-foreground">Karbo / Lemak</p>
+                  <p className="mt-1 text-sm font-semibold tabular-nums text-muted-foreground">
+                    {profile.targetCarbsG}g / {profile.targetFatG}g
+                  </p>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-start justify-between gap-3 rounded-xl border border-dashed p-4 sm:flex-row sm:items-center">
+            <div className="flex flex-col items-start justify-between gap-3 rounded-xl border border-dashed border-border p-4 sm:flex-row sm:items-center">
               <p className="text-xs text-muted-foreground">
-                Anda belum melengkapi profil fisik dan target berat badan.
+                Kamu belum melengkapi profil fisik dan target berat badan.
               </p>
               <Link href="/onboarding">
                 <Button size="sm">Mulai Onboarding Sekarang</Button>
@@ -174,36 +210,67 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* BYOK Gemini API Key Vault (AES-256-GCM) */}
+      {/* 2. BYOK Gemini API Key */}
       <ByokKeyCard />
 
-      {/* PWA Push Notification Meal Reminders */}
+      {/* 3. Pengingat Makan Terjadwal */}
       <PwaPushReminderCard />
 
-      {/* Preferensi Tampilan & Keamanan */}
-      <Card>
+      {/* 4. Preferensi Tampilan */}
+      <Card id="tampilan" className="scroll-mt-20 rounded-2xl border-border bg-card">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 font-display text-lg font-bold">
             <Palette className="h-5 w-5 text-primary" />
-            Tema Antarmuka & Privasi Data
+            Tema & Tampilan
           </CardTitle>
-          <CardDescription>
-            Dukungan penuh Light Mode dan Dark Mode serta enkripsi server-side.
+          <CardDescription className="text-xs text-muted-foreground">
+            Pilih mode tampilan yang nyaman untuk matamu.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-start gap-2.5 text-xs text-muted-foreground">
-            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              Seluruh komunikasi antara Frontend dan Backend berjalan di dalam
-              jaringan internal Coolify. Kunci Gemini API Anda tidak pernah
-              disimpan di <code>localStorage</code> browser.
+              Palet warna "Dapur Segar" dirancang dengan kontras ramah mata yang memenuhi standar aksesibilitas WCAG AA baik di mode terang maupun gelap.
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium">Mode Tema:</span>
+            <span className="text-xs font-medium text-foreground">Mode Tema:</span>
             <ThemeToggle />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 5. Informasi Akun & Sesi */}
+      <Card id="akun" className="scroll-mt-20 rounded-2xl border-border bg-card">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 font-display text-lg font-bold">
+            <User className="h-5 w-5 text-primary" />
+            Akun & Sesi
+          </CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">
+            Informasi akun Google yang sedang terhubung.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              {userInfo?.name || "Pengguna NutriSnap"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {userInfo?.email || "-"}
+            </p>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void handleLogout()}
+            className="gap-1.5 min-h-[44px] text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <LogOut className="h-4 w-4" />
+            Keluar Sesi
+          </Button>
         </CardContent>
       </Card>
     </div>

@@ -3,7 +3,7 @@
 | Informasi Dokumen | Detail |
 | :--- | :--- |
 | **Nama Produk** | **NutriSnap** |
-| **Versi Dokumen** | 1.0.0 |
+| **Versi Dokumen** | 1.1.0 — revisi UI/UX, integritas data, dan kejelasan konten (lihat `docs/REFACTOR.md`) |
 | **Status** | Approved for Development |
 | **Metodologi** | Agile Scrum |
 | **Target Platform** | Web Application (Responsive Mobile & Desktop) + Progressive Web App (PWA iOS & Android) |
@@ -86,6 +86,8 @@ $$\text{Maintenance Calories (TDEE)} = \text{BMR} \times \text{Activity Multipli
   2. **Given** pengguna menekan tombol "Continue with Google", **When** autentikasi OAuth berhasil, **Then** sistem membuat sesi aman dan memeriksa status `onboarding_completed`:
      - Jika `false`, arahkan ke `/onboarding`.
      - Jika `true`, arahkan ke `/dashboard`.
+  3. **(v1.1)** **Given** pengguna tanpa sesi valid membuka rute terproteksi atau token kedaluwarsa (`401`), **When** halaman dimuat atau request gagal, **Then** frontend menghapus token lokal dan mengarahkan ke `/login?next=<rute>`. Frontend **tidak pernah** membuat sesi otomatis atau akun demo.
+  4. **(v1.1)** Login demo/dev (jika ada) hanya aktif saat `NODE_ENV !== production` **dan** flag eksplisit menyala, baik di frontend maupun backend. Endpoint penerbit token dari `googleId/email` kiriman klien wajib nonaktif di produksi.
 
 #### US-02: BYOK (Bring Your Own Gemini API Key) Management
 - **Sebagai** pengguna, **saya ingin** menyimpan Google Gemini API Key milik saya sendiri di menu Settings (atau saat Onboarding), **sehingga** saya dapat menggunakan fitur AI Scanner dan Chatbot dengan aman.
@@ -107,6 +109,12 @@ $$\text{Maintenance Calories (TDEE)} = \text{BMR} \times \text{Activity Multipli
      - **Status Program Otomatis**: *Bulking (Surplus)* jika Target Berat > Berat Saat Ini, *Cutting (Deficit)* jika Target Berat < Berat Saat Ini, atau *Maintenance* jika sama.
      - **Target Kalori Harian (kcal)** dan **Target Protein Harian (gram)**.
   2. **Given** pengguna menyetujui hasil kalkulasi dan menekan "Mulai Perjalanan NutriSnap", **When** data disimpan, **Then** profil pengguna diperbarui (`onboarding_completed = true`) dan pengguna diarahkan ke `/dashboard`.
+  3. **(v1.1) Form kosong & tervalidasi:** semua field mulai kosong (nama diisi dari akun Google, boleh diedit); contoh hanya sebagai placeholder. Tombol lanjut nonaktif sampai input valid (usia 13–100, tinggi 100–250 cm, berat 25–300 kg); tidak ada nilai pengganti diam-diam untuk input kosong.
+  4. **(v1.1) Tingkat aktivitas:** UI menyediakan kelima opsi §3.3 (termasuk `very_active`), masing-masing dengan contoh singkat.
+  5. **(v1.1) Guardrail yang bisa ditindaklanjuti:** bila delta harian di luar ±1000 kcal atau target di bawah batas minimum, tampilkan banner dengan tombol **"Sesuaikan ke rentang aman"** (−500 kcal cutting / +300 s/d +500 kcal lean bulk, durasi dihitung ulang) dan **"Ubah target"**. Pratinjau menampilkan perubahan berat per minggu.
+  6. **(v1.1) Usia < 18 tahun:** mode cutting tidak ditawarkan dan ditampilkan catatan untuk berkonsultasi dengan dokter/ahli gizi, karena target kalori umum tidak dirancang untuk remaja.
+  7. **(v1.1) Mode edit:** membuka wizard dari Settings memuat profil yang ada (tidak menimpa dengan nilai bawaan).
+  8. **(v1.1) Catatan produk:** kategori BMI mengikuti WHO; tampilkan keterangan bahwa BMI bukan diagnosis. Penggunaan ambang Asia-Pasifik/Kemenkes dicatat sebagai keputusan produk terpisah.
 
 ---
 
@@ -118,6 +126,9 @@ $$\text{Maintenance Calories (TDEE)} = \text{BMR} \times \text{Activity Multipli
   1. **Given** pengguna membuka halaman `/log` (tab "AI Photo Scan") dan memilih foto dari kamera/galeri, **When** foto dipilih, **Then** `apps/frontend` mengompresi foto di sisi client (`<= 1280px`, WebP/JPEG) sebelum mengirimkannya ke `apps/backend`.
   2. **Given** `apps/backend` menerima foto dan tipe waktu makan (`breakfast`, `lunch`, `dinner`, `snack`), **When** backend mendekripsi BYOK user dan memanggil Gemini Multimodal dengan `responseSchema`, **Then** Gemini mengembalikan daftar item makanan beserta estimasi berat (gram), kalori (kcal), protein (g), karbohidrat (g), dan lemak (g).
   3. **Given** hasil ekstraksi AI tampil di layar, **When** pengguna meninjau daftar makanan, **Then** pengguna dapat mengedit nama/gramasi/kalori jika diperlukan sebelum menekan tombol "Simpan ke Log Harian".
+  4. **(v1.1)** Hasil ditandai jelas sebagai **estimasi AI**. Perubahan gramasi menskalakan makro dari nilai per gram awal (tanpa galat pembulatan berantai). Pengguna dapat menambah item manual dan melihat ringkasan total sebelum menyimpan.
+  5. **(v1.1)** Tersedia dua tombol terpisah: **Ambil foto** (kamera) dan **Pilih dari galeri**. Saat memproses, tampil thumbnail dengan indikator pindai, status bertahap, dan tombol batal.
+  6. **(v1.1)** Bila API key belum diatur/tidak valid, tab Scan menampilkan banner dengan tautan ke `/settings#api-key`, dan tombol scan dinonaktifkan dengan alasan jelas (pencatatan manual tetap berfungsi; selaras US-02 AC3).
 
 #### US-05: Manual Input Form (Food Name + Weight in Grams)
 - **Sebagai** pengguna, **saya ingin** mencatat makanan secara manual dengan mengetik nama makanan dan beratnya dalam gram, **sehingga** saya tetap bisa mencatat nutrisi dengan cepat meskipun tidak memiliki foto makanan.
@@ -127,6 +138,8 @@ $$\text{Maintenance Calories (TDEE)} = \text{BMR} \times \text{Activity Multipli
      - Menekan tombol **"Estimasi Nutrisi dengan AI"** (menghitung makro dari nama + gramasi via Gemini), ATAU
      - Mengisi/mengoreksi nilai kalori (kcal) dan protein (g) secara langsung.
   2. **Given** form valid dan pengguna menekan "Simpan Log", **When** tersimpan di database, **Then** total kalori dan protein harian di Dashboard langsung bertambah secara real-time.
+  3. **(v1.1)** Form mulai **kosong** (tanpa nilai kalori/protein bawaan). Setelah estimasi, nilai disimpan per-100 g dan diskalakan di klien saat gramasi berubah; pengguna tetap dapat mengoreksi manual. Tombol simpan nonaktif sampai nama, berat, dan kalori valid.
+  4. **(v1.1)** Log disimpan pada **tanggal lokal pengguna** (zona waktu profil) atau tanggal yang sedang dilihat di Dashboard (`?date=`), bukan tanggal UTC.
 
 ---
 
@@ -141,6 +154,10 @@ $$\text{Maintenance Calories (TDEE)} = \text{BMR} \times \text{Activity Multipli
      - Untuk user *Cutting*: Menunjukkan apakah asupan hari ini berada dalam zona defisit aman (*On Track Deficit*) atau melewati batas kalori (*Over Target*).
   3. Menampilkan **Protein & Macro Progress Bars** (Protein sebagai metrik utama, diikuti Karbohidrat & Lemak).
   4. Menampilkan daftar **Log Makanan Hari Ini** yang dikelompokkan berdasarkan *Sarapan, Makan Siang, Makan Malam,* dan *Camilan*, lengkap dengan opsi hapus/edit item.
+  5. **(v1.1) Integritas data:** Dashboard tidak pernah menampilkan angka bawaan. Memuat → skeleton; gagal → pesan + "Coba lagi"; profil belum ada → ajakan melengkapi profil; belum ada log → *empty state* dengan dua aksi (foto / ketik manual).
+  6. **(v1.1) Status tidak hanya warna:** status surplus/defisit/melebihi target ditampilkan dengan ikon + kalimat eksplisit dalam bahasa Indonesia, ditempatkan menonjol di kartu utama; jenis program ditampilkan sebagai chip netral.
+  7. **(v1.1) Hapus yang aman:** menghapus log meminta konfirmasi dan menyediakan **Urungkan** beberapa detik.
+  8. **(v1.1) Tanggal:** "hari ini" dan navigasi tanggal dihitung berdasarkan zona waktu pengguna; tanggal masa depan tidak dapat dipilih.
 
 ---
 
@@ -151,6 +168,7 @@ $$\text{Maintenance Calories (TDEE)} = \text{BMR} \times \text{Activity Multipli
 - **Acceptance Criteria:**
   1. **Given** pengguna membuka halaman `/chat`, **When** pengguna mengirim pesan pertanyaan (atau memilih *Quick Prompt Chip* seperti *"Saya masih kurang 600 kcal & 45g protein malam ini, sebaiknya makan apa?"*), **Then** `apps/backend` menginjeksikan konteks profil pengguna (BMI, TDEE, Target Bulking/Cutting, dan sisa kalori/protein hari ini) ke sistem prompt Gemini.
   2. **Given** Gemini memproses jawaban, **When** respons dikirim, **Then** jawaban ditampilkan secara *streaming* (atau respons cepat terformat Markdown rapi) dan riwayat percakapan disimpan di database pengguna.
+  3. **(v1.1)** Balasan dirender sebagai Markdown (tabel, daftar, tebal) tanpa HTML mentah. Pesan pengguna tampil seketika (optimistis); bila gagal, pesan tetap terlihat dengan opsi **Coba lagi**. Quick prompt dihitung dari sisa target pengguna. Tanpa API key, composer dinonaktifkan dan ditampilkan ajakan mengatur key. Tampil catatan bahwa saran bersifat umum dan bukan pengganti konsultasi tenaga kesehatan.
 
 ---
 
@@ -159,7 +177,7 @@ $$\text{Maintenance Calories (TDEE)} = \text{BMR} \times \text{Activity Multipli
 #### US-08: Responsive Navigation (<768px Bottom Nav) & Light/Dark Mode
 - **Sebagai** pengguna mobile, **saya ingin** bernavigasi menggunakan satu tangan melalui *bottom navigation bar* pada layar `< 768px` serta memilih mode tampilan Terang (*Light*) atau Gelap (*Dark*).
 - **Acceptance Criteria:**
-  1. Pada viewport `< 768px`, navigasi utama berada di bagian bawah layar (*Fixed Bottom Navbar*) dengan 5 item: **Dashboard**, **Analytics**, **+ Scan/Log** (tombol aksi tengah menonjol), **AI Coach**, dan **Settings**.
+  1. Pada viewport `< 768px`, navigasi utama berada di bagian bawah layar (*Fixed Bottom Navbar*) dengan 5 item: **Beranda**, **Progres**, **Catat** (tombol aksi tengah menonjol), **Coach**, dan **Pengaturan** (label berbahasa Indonesia sesuai glosarium `DESIGN.md` §7).
   2. Pada viewport `>= 768px`, navigasi beralih menjadi *Left Sidebar* yang rapi dan *Bottom Navbar* disembunyikan.
   3. Pengguna dapat mengubah tema (*Light / Dark / System*) tanpa *page reload* maupun *flash of unstyled content*.
 
@@ -169,6 +187,21 @@ $$\text{Maintenance Calories (TDEE)} = \text{BMR} \times \text{Activity Multipli
   1. Aplikasi memiliki `manifest.webmanifest` valid, ikon multi-ukuran, dan Service Worker (`sw.js`) yang mendukung event `push` dan `notificationclick`.
   2. Pengguna dapat mengaktifkan/menonaktifkan pengingat makan serta mengatur jam pengingat (*Sarapan, Makan Siang, Makan Malam*) dan zona waktu di halaman Settings.
   3. Scheduler di `apps/backend` memeriksa secara berkala setiap 15 menit; jika waktu lokal pengguna telah melewati jam makan yang ditentukan dan belum ada catatan di `meal_logs` untuk waktu makan tersebut pada hari itu, sistem mengirimkan Web Push Notification yang jika diklik akan membuka halaman `/log`.
+  4. **(v1.1)** Switch pengingat dan pilihan zona waktu tersedia di UI. Bila izin notifikasi ditolak, tidak didukung, atau pendaftaran push gagal, UI menampilkan keadaan tersebut dan **tidak** menyimpan langganan palsu. Tombol uji hanya aktif jika langganan nyata ada. Di iOS, pengguna diarahkan memasang aplikasi ke Layar Utama terlebih dahulu.
+  5. **(v1.1)** Service Worker didaftarkan secara global satu kali. Install Banner tampil di browser non-standalone (instruksi manual untuk iOS Safari). Manifest memakai `start_url: /dashboard` dan ikon PNG 192/512 + maskable yang benar-benar tersedia.
+
+---
+
+### Epic 7: Public Landing & Trust Content (v1.1)
+
+#### US-10: Landing Page yang Jelas & Jujur
+- **Sebagai** calon pengguna, **saya ingin** memahami apa itu NutriSnap, bagaimana cara kerjanya, dan apa konsekuensi memakai API key sendiri, **sehingga** saya yakin sebelum mendaftar.
+- **Acceptance Criteria:**
+  1. Landing menampilkan: hero dengan manfaat konkret + mockup produk (berlabel *"Contoh tampilan dengan data fiktif"*), cara kerja 3 langkah, kalkulator kebutuhan kalori tanpa login, ringkasan fitur dengan cuplikan UI nyata, penjelasan API key Gemini dengan bahasa awam, FAQ, dan footer.
+  2. Kalkulator tidak menampilkan hasil bila input kosong/tidak valid; menyertakan lima tingkat aktivitas; tombol "Simpan rencana ini" membawa input ke onboarding.
+  3. Tidak ada klaim yang tidak dapat dibuktikan (mis. "standar militer", "akurat", "< 3 detik", jumlah kuota gratis Google, nomor versi palsu). Hasil AI selalu disebut estimasi.
+  4. Jargon teknis (AES-256-GCM, Mifflin-St Jeor, IV/Auth Tag) hanya muncul di FAQ/"Detail teknis" yang dilipat; tidak ada panel UI palsu.
+  5. Footer memuat tautan Kebijakan Privasi dan Syarat Penggunaan (isi mengikuti perilaku backend nyata: penyimpanan foto, retensi, penghapusan data) serta disclaimer bahwa NutriSnap bukan alat medis.
 
 ---
 
@@ -184,4 +217,7 @@ $$\text{Maintenance Calories (TDEE)} = \text{BMR} \times \text{Activity Multipli
    - Cookie sesi menggunakan atribut `HttpOnly`, `Secure`, dan `SameSite=Lax`.
 3. **Reliability & Portability:**
    - Seluruh layanan dikemas dalam Docker (`Dockerfile` masing-masing untuk `apps/frontend` dan `apps/backend` + `docker-compose.coolify.yml`) sehingga dapat di-redeploy di Coolify kapan saja dengan *zero configuration drift*.
+4. **Accessibility (v1.1):** WCAG 2.1 AA (kontras terverifikasi otomatis); pinch-zoom tidak boleh diblokir; touch target ≥ 44 px; label form terhubung; elemen progres/ring memiliki peran dan label ARIA; hormati `prefers-reduced-motion`.
+5. **Data Integrity & Honesty (v1.1):** tidak ada data contoh/dummy di jalur produksi; tidak ada fallback angka diam-diam; setiap kegagalan jaringan menghasilkan pesan yang dapat ditindaklanjuti; tanggal dan zona waktu konsisten antara frontend dan backend.
+6. **Localization (v1.1):** UI berbahasa Indonesia (sapaan "kamu"), satuan baku `kcal/g/kg/cm`, format angka dan tanggal `id-ID`. Glosarium baku di `DESIGN.md` §7.
 

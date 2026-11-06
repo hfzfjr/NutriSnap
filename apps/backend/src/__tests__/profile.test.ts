@@ -48,7 +48,30 @@ describe("@nutrisnap/backend — Onboarding & Personalized Nutrition Profile [NS
       headers: { Authorization: `Bearer ${token}` },
     });
     expect(profileRes.statusCode).toBe(200);
-    expect(profileRes.json().data.weightLogs.length).toBeGreaterThanOrEqual(1);
+    const initialLogs = profileRes.json().data.weightLogs;
+    expect(initialLogs.length).toBeGreaterThanOrEqual(1);
+
+    // Test adding and deleting a weight log
+    const addWeightRes = await app.inject({
+      method: "POST",
+      url: "/api/v1/profile/weight",
+      headers: { Authorization: `Bearer ${token}` },
+      payload: {
+        recordedDate: "2026-11-06",
+        weightKg: 59.0,
+        notes: "Timbang pagi",
+      },
+    });
+    expect(addWeightRes.statusCode).toBe(200);
+    const addedLogId = addWeightRes.json().data.weightLog.id;
+
+    const deleteWeightRes = await app.inject({
+      method: "DELETE",
+      url: `/api/v1/profile/weight/${addedLogId}`,
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(deleteWeightRes.statusCode).toBe(200);
+    expect(deleteWeightRes.json().data.deleted).toBe(true);
 
     await app.close();
   });

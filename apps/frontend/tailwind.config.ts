@@ -43,9 +43,30 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        macro: {
+          protein: "hsl(var(--macro-protein))",
+          "protein-foreground": "hsl(var(--macro-protein-foreground))",
+          carbs: "hsl(var(--macro-carbs))",
+          "carbs-foreground": "hsl(var(--macro-carbs-foreground))",
+          fat: "hsl(var(--macro-fat))",
+          "fat-foreground": "hsl(var(--macro-fat-foreground))",
+        },
+        status: {
+          ontrack: "hsl(var(--status-ontrack))",
+          "ontrack-foreground": "hsl(var(--status-ontrack-foreground))",
+          under: "hsl(var(--status-under))",
+          "under-foreground": "hsl(var(--status-under-foreground))",
+          over: "hsl(var(--status-over))",
+          "over-foreground": "hsl(var(--status-over-foreground))",
+        },
+      },
+      fontFamily: {
+        sans: ["var(--font-sans)", "system-ui", "-apple-system", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-sans)", "serif"],
       },
       borderRadius: {
-        "2xl": "calc(var(--radius) + 2px)",
+        "3xl": "calc(var(--radius) + 8px)",
+        "2xl": "calc(var(--radius) + 4px)",
         xl: "var(--radius)",
         lg: "calc(var(--radius) - 2px)",
         md: "calc(var(--radius) - 4px)",
@@ -57,4 +78,3 @@ const config: Config = {
 };
 
 export default config;
-

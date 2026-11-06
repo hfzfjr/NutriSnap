@@ -4,56 +4,78 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --background: 40 33% 98%; /* #FAF8F5 */
+    --foreground: 155 45% 15%; /* #152E23 */
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 155 45% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 160 84% 39%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 152 81% 96%;
-    --accent-foreground: 163 88% 16%;
-    --destructive: 0 84% 60%;
+    --popover-foreground: 155 45% 15%;
+    --primary: 155 44% 20%; /* #1D4A38 - Hijau Daun Tua */
+    --primary-foreground: 40 33% 98%;
+    --secondary: 35 25% 93%; /* #F3EFEA */
+    --secondary-foreground: 155 45% 15%;
+    --muted: 35 20% 92%;
+    --muted-foreground: 150 10% 40%;
+    --accent: 28 85% 55%; /* #EB6B2A - Oranye Wortel Segar */
+    --accent-foreground: 155 45% 12%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 160 84% 39%;
-    --radius: 0.875rem;
+    --border: 35 15% 88%;
+    --input: 35 15% 88%;
+    --ring: 155 44% 20%;
+    --radius: 0.75rem;
 
-    /* Macro & Program Semantic Tokens */
-    --macro-calories: #10b981;
-    --macro-protein: #6366f1;
-    --macro-carbs: #f59e0b;
-    --macro-fat: #f43f5e;
-    --status-surplus: #06b6d4;
-    --status-deficit: #8b5cf6;
+    /* Semantic Macro Tokens */
+    --macro-protein: 15 75% 55%; /* Terracotta */
+    --macro-protein-foreground: 0 0% 100%;
+    --macro-carbs: 42 85% 50%; /* Kunyit / Jagung */
+    --macro-carbs-foreground: 155 45% 15%;
+    --macro-fat: 160 40% 35%; /* Alpukat */
+    --macro-fat-foreground: 0 0% 100%;
+
+    /* Semantic Status Tokens */
+    --status-ontrack: 155 44% 25%; /* Hijau */
+    --status-ontrack-foreground: 0 0% 100%;
+    --status-under: 42 85% 45%; /* Kuning */
+    --status-under-foreground: 155 45% 15%;
+    --status-over: 0 70% 50%; /* Merah */
+    --status-over-foreground: 0 0% 100%;
   }
 
   .dark {
-    --background: 222 42% 6%;
-    --foreground: 210 40% 98%;
-    --card: 221 39% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 220 41% 13%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 160 84% 39%;
-    --primary-foreground: 179 84% 10%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 163 88% 16%;
-    --accent-foreground: 152 81% 96%;
-    --destructive: 0 91% 71%;
-    --destructive-foreground: 222 47% 11%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 158 64% 52%;
+    --background: 155 30% 7%; /* #0D1A14 */
+    --foreground: 40 20% 95%; /* #F6F4F0 */
+    --card: 155 25% 10%; /* #13241C */
+    --card-foreground: 40 20% 95%;
+    --popover: 155 25% 10%;
+    --popover-foreground: 40 20% 95%;
+    --primary: 150 45% 45%; /* #3E9B70 */
+    --primary-foreground: 155 30% 7%;
+    --secondary: 155 20% 14%;
+    --secondary-foreground: 40 20% 95%;
+    --muted: 155 20% 14%;
+    --muted-foreground: 150 10% 65%;
+    --accent: 28 85% 58%;
+    --accent-foreground: 155 30% 7%;
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 155 20% 18%;
+    --input: 155 20% 18%;
+    --ring: 150 45% 45%;
+
+    --macro-protein: 15 75% 62%;
+    --macro-protein-foreground: 0 0% 100%;
+    --macro-carbs: 42 85% 60%;
+    --macro-carbs-foreground: 155 30% 7%;
+    --macro-fat: 160 45% 50%;
+    --macro-fat-foreground: 0 0% 100%;
+
+    --status-ontrack: 150 50% 50%;
+    --status-ontrack-foreground: 155 30% 7%;
+    --status-under: 42 85% 55%;
+    --status-under-foreground: 155 30% 7%;
+    --status-over: 0 70% 60%;
+    --status-over-foreground: 0 0% 100%;
   }
 }
 
@@ -65,7 +87,7 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary font-sans;
   }
   h1, h2, h3, h4, h5, h6 {
     text-wrap: balance;
@@ -77,4 +99,3 @@
     scroll-margin-top: 5rem;
   }
 }
-

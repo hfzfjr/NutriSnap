@@ -85,6 +85,18 @@ describe("@nutrisnap/backend — Dual Nutrition Logging (AI Vision & Manual CRUD
     expect(dailyData.totals.calories).toBe(597);
     expect(dailyData.meals).toHaveLength(1);
 
+    // 5b. Update Meal Log (/api/v1/meals/:id)
+    const patchRes = await app.inject({
+      method: "PATCH",
+      url: `/api/v1/meals/${mealLogId}`,
+      headers: { Authorization: `Bearer ${token}` },
+      payload: {
+        title: "Makan Siang Dada Ayam Bakar Spesial",
+      },
+    });
+    expect(patchRes.statusCode).toBe(200);
+    expect(patchRes.json().data.meal.title).toBe("Makan Siang Dada Ayam Bakar Spesial");
+
     // 6. Delete Meal Log (/api/v1/meals/:id)
     const delRes = await app.inject({
       method: "DELETE",

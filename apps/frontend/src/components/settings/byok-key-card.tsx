@@ -3,12 +3,17 @@
 import type { ApiKeyStatusResponse } from "@nutrisnap/shared";
 import {
   CheckCircle2,
+  ChevronDown,
+  Clipboard,
   ExternalLink,
+  Eye,
+  EyeOff,
   KeyRound,
   ShieldCheck,
   Trash2,
 } from "lucide-react";
 import * as React from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,14 +33,11 @@ interface ByokKeyCardProps {
 export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
   const [status, setStatus] = React.useState<ApiKeyStatusResponse | null>(null);
   const [apiKeyInput, setApiKeyInput] = React.useState("");
+  const [showKey, setShowKey] = React.useState(false);
   const [preferredModel, setPreferredModel] = React.useState<
     "gemini-2.5-flash" | "gemini-2.5-pro"
   >("gemini-2.5-flash");
   const [isLoading, setIsLoading] = React.useState(false);
-  const [feedback, setFeedback] = React.useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
 
   const loadStatus = React.useCallback(async () => {
     try {
@@ -48,7 +50,7 @@ export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
         setPreferredModel(data.preferredModel);
       }
     } catch {
-      // Abaikan jika user belum login
+      // Abaikan jika belum login
     }
   }, []);
 
@@ -56,129 +58,182 @@ export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
     void loadStatus();
   }, [loadStatus]);
 
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        setApiKeyInput(text.trim());
+        toast.info("Kunci berhasil ditempel dari papan klip.");
+      }
+    } catch {
+      toast.error("Tidak dapat mengakses clipboard. Silakan tempel manual.");
+    }
+  };
+
   const handleSaveKey = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!apiKeyInput.trim()) return;
+    const cleanKey = apiKeyInput.trim();
+    if (cleanKey.length < 20) {
+      toast.error("Kunci API terlalu pendek (minimal 20 karakter).");
+      return;
+    }
 
     setIsLoading(true);
-    setFeedback(null);
     try {
       const saved = await apiFetch<ApiKeyStatusResponse>("/apikey", {
         method: "PUT",
         body: JSON.stringify({
-          apiKey: apiKeyInput.trim(),
+          apiKey: cleanKey,
           preferredModel,
         }),
       });
       setStatus(saved);
       setApiKeyInput("");
-      setFeedback({
-        type: "success",
-        text: `API Key berhasil divalidasi dan dienkripsi (${saved.keyHint}).`,
-      });
+      setShowKey(false);
+      toast.success(
+        `Kunci API Gemini berhasil divalidasi dan dienkripsi (${saved.keyHint}).`
+      );
       onSuccess?.(saved);
     } catch (err) {
-      setFeedback({
-        type: "error",
-        text:
-          err instanceof Error
-            ? err.message
-            : "Gagal menyimpan Gemini API Key.",
-      });
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Gagal menyimpan & menguji Kunci API Gemini."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDeleteKey = async () => {
+    if (!window.confirm("Yakin ingin menghapus Kunci API Gemini tersimpan?")) {
+      return;
+    }
+
     setIsLoading(true);
-    setFeedback(null);
     try {
       const deleted = await apiFetch<ApiKeyStatusResponse>("/apikey", {
         method: "DELETE",
       });
       setStatus(deleted);
-      setFeedback({
-        type: "success",
-        text: "API Key terenkripsi telah dihapus dari server.",
-      });
+      toast.success("Kunci API Gemini telah dihapus dari server.");
     } catch (err) {
-      setFeedback({
-        type: "error",
-        text:
-          err instanceof Error ? err.message : "Gagal menghapus Gemini API Key.",
-      });
+      toast.error(
+        err instanceof Error ? err.message : "Gagal menghapus Kunci API."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
+  const isTooShort =
+    apiKeyInput.trim().length > 0 && apiKeyInput.trim().length < 20;
+
   return (
-    <Card>
+    <Card id="api-key" className="scroll-mt-20 rounded-2xl border-border bg-card">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 font-display text-lg font-bold">
               <KeyRound className="h-5 w-5 text-primary" />
-              BYOK Google Gemini API Key Vault
+              API Key Gemini
             </CardTitle>
-            <CardDescription>
-              Dienkripsi di server menggunakan <code>AES-256-GCM</code> (96-bit IV + 128-bit Auth Tag).
+            <CardDescription className="text-xs text-muted-foreground">
+              Dipakai untuk scan foto makanan dan Coach AI. Disimpan terenkripsi di server dan tidak pernah ditampilkan lagi.
             </CardDescription>
           </div>
-          {status?.hasKey ? (
-            <Badge variant="default" className="gap-1">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Aktif ({status.keyHint})
-            </Badge>
-          ) : (
-            <Badge variant="outline">Belum Diatur</Badge>
-          )}
+          <div>
+            {status?.hasKey ? (
+              <Badge variant="default" className="gap-1.5 py-1">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Tersimpan: {status.keyHint}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="py-1">
+                Belum Diatur
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {feedback && (
-          <div
-            className={`rounded-xl border p-3 text-xs ${
-              feedback.type === "success"
-                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
-                : "border-destructive/40 bg-destructive/10 text-destructive"
-            }`}
-          >
-            {feedback.text}
-          </div>
-        )}
-
-        <form onSubmit={handleSaveKey} className="space-y-3">
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <label className="font-medium">Google Gemini API Key</label>
+        {/* Panduan 3 Langkah */}
+        <div className="rounded-xl border border-border bg-secondary/30 p-3.5 text-xs text-muted-foreground space-y-2">
+          <p className="font-semibold text-foreground">
+            Cara mendapatkan kunci API gratis:
+          </p>
+          <ol className="list-inside list-decimal space-y-1">
+            <li>
+              Buka{" "}
               <a
                 href="https://aistudio.google.com/app/apikey"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-primary hover:underline"
+                className="inline-flex items-center gap-0.5 font-medium text-primary hover:underline"
               >
-                Dapatkan Key di Google AI Studio
+                aistudio.google.com/app/apikey
                 <ExternalLink className="h-3 w-3" />
               </a>
+            </li>
+            <li>Klik tombol <strong>Create API key</strong> pada proyek Google-mu.</li>
+            <li>Salin kuncinya dan tempel pada isian di bawah.</li>
+          </ol>
+        </div>
+
+        <form onSubmit={handleSaveKey} className="space-y-4">
+          <div className="space-y-1.5">
+            <label htmlFor="gemini-key-input" className="text-xs font-medium text-foreground">
+              Kunci API Google AI Studio
+            </label>
+            <div className="relative flex items-center">
+              <Input
+                id="gemini-key-input"
+                type={showKey ? "text" : "password"}
+                placeholder="AIzaSy..."
+                value={apiKeyInput}
+                onChange={(e) => setApiKeyInput(e.target.value)}
+                autoComplete="off"
+                className="pr-20"
+              />
+              <div className="absolute right-1.5 flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowKey(!showKey)}
+                  aria-label={showKey ? "Sembunyikan kunci" : "Tampilkan kunci"}
+                >
+                  {showKey ? (
+                    <EyeOff className="h-3.5 w-3.5" />
+                  ) : (
+                    <Eye className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => void handlePaste()}
+                >
+                  <Clipboard className="mr-1 h-3 w-3" />
+                  Tempel
+                </Button>
+              </div>
             </div>
-            <Input
-              type="password"
-              placeholder={
-                status?.keyHint
-                  ? `Tersimpan: ${status.keyHint} (Ketik key baru untuk mengganti)`
-                  : "Masukkan kunci AIzaSy..."
-              }
-              value={apiKeyInput}
-              onChange={(e) => setApiKeyInput(e.target.value)}
-              autoComplete="off"
-            />
+            {isTooShort && (
+              <p className="text-[11px] text-destructive">
+                Kunci API terlalu pendek (minimal 20 karakter).
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium">Model Gemini Pilihan</label>
+            <label className="text-xs font-medium text-foreground">
+              Model Gemini Pilihan
+            </label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
@@ -187,8 +242,9 @@ export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
                 }
                 size="sm"
                 onClick={() => setPreferredModel("gemini-2.5-flash")}
+                className="text-xs justify-center"
               >
-                gemini-2.5-flash (Cepat)
+                gemini-2.5-flash (Cepat & Hemat)
               </Button>
               <Button
                 type="button"
@@ -197,6 +253,7 @@ export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
                 }
                 size="sm"
                 onClick={() => setPreferredModel("gemini-2.5-pro")}
+                className="text-xs justify-center"
               >
                 gemini-2.5-pro (Presisi)
               </Button>
@@ -206,11 +263,13 @@ export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
           <div className="flex items-center gap-2 pt-1">
             <Button
               type="submit"
-              className="flex-1 gap-2"
+              className="flex-1 gap-2 min-h-[44px]"
               disabled={isLoading || apiKeyInput.trim().length < 20}
             >
               <ShieldCheck className="h-4 w-4" />
-              {isLoading ? "Memvalidasi & Mengenkripsi..." : "Validasi & Enkripsi Key"}
+              {isLoading
+                ? "Menguji & Menyimpan..."
+                : "Simpan & Uji Key"}
             </Button>
 
             {status?.hasKey && (
@@ -218,17 +277,36 @@ export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
                 type="button"
                 variant="destructive"
                 size="icon"
-                onClick={handleDeleteKey}
+                onClick={() => void handleDeleteKey()}
                 disabled={isLoading}
-                aria-label="Hapus API Key"
+                aria-label="Hapus Kunci API Gemini"
+                className="min-h-[44px] min-w-[44px]"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
           </div>
         </form>
+
+        {/* Detail Teknis */}
+        <details className="group rounded-xl border border-border bg-secondary/20 p-3 text-xs text-muted-foreground">
+          <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-foreground hover:text-primary">
+            <span>Detail teknis enkripsi & privasi</span>
+            <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="mt-2.5 space-y-1.5 border-t border-border pt-2.5 text-[11px] leading-relaxed">
+            <p>
+              • <strong>AES-256-GCM</strong>: Setiap kunci dienkripsi menggunakan IV 96-bit unik dan verifikasi Auth Tag 128-bit.
+            </p>
+            <p>
+              • <strong>Zero Plaintext</strong>: Kunci asli tidak pernah dicatat di log server maupun dikirim kembali ke browser.
+            </p>
+            <p>
+              • <strong>Didekripsi Hanya Saat Dibutuhkan</strong>: Kunci hanya didekripsi sementara di memori server saat memanggil Google Gemini API.
+            </p>
+          </div>
+        </details>
       </CardContent>
     </Card>
   );
 }
-

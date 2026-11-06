@@ -104,6 +104,9 @@ Mengambil profil nutrisi lengkap beserta riwayat log berat badan (`weight_logs`)
 #### `POST /api/v1/profile/weight`
 Mencatat berat badan terbaru pengguna dan memperbarui skor BMI secara otomatis.
 
+#### `DELETE /api/v1/profile/weight/:id`
+Menghapus riwayat catatan berat badan tertentu milik pengguna.
+
 ---
 
 ### 2.3. BYOK Gemini API Key Vault (`/api/v1/apikey`)
@@ -257,7 +260,10 @@ Menyimpan hasil AI Photo Scanner (yang sudah dikonfirmasi pengguna) maupun hasil
 #### 4. `GET /api/v1/meals/daily?date=YYYY-MM-DD`
 Mengambil seluruh log makanan pada tanggal tertentu beserta ringkasan total kalori, protein, karbohidrat, lemak, dan status *Surplus / Deficit* dibandingkan target profil pengguna.
 
-#### 5. `DELETE /api/v1/meals/:id`
+#### 5. `PATCH /api/v1/meals/:id`
+Memperbarui informasi catatan makan tertentu (`title`, `mealType`, `aiNotes`).
+
+#### 6. `DELETE /api/v1/meals/:id`
 Menghapus catatan makan tertentu milik pengguna.
 
 ---

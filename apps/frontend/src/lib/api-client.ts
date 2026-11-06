@@ -3,20 +3,41 @@ export const API_BASE_URL =
 
 const TOKEN_STORAGE_KEY = "nutrisnap_auth_token";
 
+export class ApiError extends Error {
+  status: number;
+  code: string;
+  details?: unknown[];
+
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    details?: unknown[]
+  ) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    this.details = details;
+  }
+}
+
 export function getStoredAuthToken(): string | null {
   if (typeof window === "undefined") return null;
+
+  // Hanya ambil dari query param ?token= jika ada (misal callback OAuth), lalu segera bersihkan
   const urlParams = new URLSearchParams(window.location.search);
   const queryToken = urlParams.get("token");
   if (queryToken) {
     localStorage.setItem(TOKEN_STORAGE_KEY, queryToken);
-    // Bersihkan query ?token= dari URL browser
     urlParams.delete("token");
+    const newSearch = urlParams.toString();
     const newUrl =
-      window.location.pathname +
-      (urlParams.toString() ? `?${urlParams.toString()}` : "");
+      window.location.pathname + (newSearch ? `?${newSearch}` : "");
     window.history.replaceState({}, "", newUrl);
     return queryToken;
   }
+
   return localStorage.getItem(TOKEN_STORAGE_KEY);
 }
 
@@ -27,6 +48,10 @@ export function setStoredAuthToken(token: string | null): void {
   } else {
     localStorage.setItem(TOKEN_STORAGE_KEY, token);
   }
+}
+
+export function clearStoredAuthToken(): void {
+  setStoredAuthToken(null);
 }
 
 export interface ApiEnvelope<T> {
@@ -53,19 +78,61 @@ export async function apiFetch<T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-    credentials: "include",
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+      credentials: "include",
+    });
+  } catch (netErr) {
+    throw new ApiError(
+      0,
+      "NETWORK_ERROR",
+      "Tidak bisa terhubung ke server. Periksa koneksi internetmu."
+    );
+  }
 
-  const json = (await response.json()) as ApiEnvelope<T>;
-  if (!response.ok || !json.success) {
-    throw new Error(
-      json.error?.message ?? `Request gagal (${response.status})`
+  // Tangani 401 Unauthorized secara terpusat
+  if (response.status === 401) {
+    setStoredAuthToken(null);
+    if (
+      typeof window !== "undefined" &&
+      !window.location.pathname.startsWith("/login") &&
+      window.location.pathname !== "/"
+    ) {
+      const next = encodeURIComponent(
+        window.location.pathname + window.location.search
+      );
+      window.location.href = `/login?next=${next}`;
+    }
+  }
+
+  let json: ApiEnvelope<T> | null = null;
+  try {
+    json = (await response.json()) as ApiEnvelope<T>;
+  } catch {
+    // Non-JSON response
+    if (!response.ok) {
+      throw new ApiError(
+        response.status,
+        "HTTP_ERROR",
+        `Terjadi kesalahan pada server (${response.status}).`
+      );
+    }
+  }
+
+  if (!response.ok || !json?.success) {
+    throw new ApiError(
+      response.status,
+      json?.error?.code ?? "UNKNOWN_ERROR",
+      json?.error?.message ??
+        (response.status === 401
+          ? "Sesi telah berakhir. Silakan masuk kembali."
+          : `Permintaan gagal (${response.status}).`),
+      json?.error?.details
     );
   }
 
   return json.data as T;
 }
-

@@ -145,6 +145,32 @@ export async function registerProfileRoutes(app: FastifyInstance): Promise<void>
     };
   });
 
+  // 3b. DELETE /api/v1/profile/weight/:id
+  app.delete("/api/v1/profile/weight/:id", async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, reply);
+    if (!user) return;
+
+    const { id } = request.params as { id: string };
+    const success = await repository.deleteWeightLog(user.id, id);
+
+    if (!success) {
+      return reply.status(404).send({
+        success: false,
+        error: {
+          code: "WEIGHT_LOG_NOT_FOUND",
+          message: "Catatan berat badan tidak ditemukan.",
+          details: [],
+        },
+      });
+    }
+
+    return {
+      success: true,
+      data: { id, deleted: true },
+      meta: { timestamp: new Date().toISOString() },
+    };
+  });
+
   // 4. GET /api/v1/analytics/overview
   app.get("/api/v1/analytics/overview", async (request, reply) => {
     const user = await requireAuthenticatedUser(request, reply);
