@@ -56,11 +56,49 @@ export async function buildApp(): Promise<FastifyInstance> {
     const statusCode =
       typeof errObj?.statusCode === "number" ? errObj.statusCode : 500;
 
+    let message = errObj?.message || "Terjadi kesalahan pada server.";
+    // Bersihkan jika pesan error berupa JSON string mentah dari Google API / upstream
+    if (message.startsWith("{") || message.includes('"error":')) {
+      try {
+        const jsonStart = message.indexOf("{");
+        const jsonEnd = message.lastIndexOf("}");
+        if (jsonStart !== -1 && jsonEnd > jsonStart) {
+          const parsed = JSON.parse(message.substring(jsonStart, jsonEnd + 1)) as {
+            error?: { message?: string; status?: string; code?: number };
+            message?: string;
+          };
+          const innerMsg = parsed?.error?.message || parsed?.message;
+          if (innerMsg) {
+            if (innerMsg.includes("no longer available") || innerMsg.includes("404")) {
+              message =
+                "Model Gemini AI telah dialihkan ke gemini-3.8-flash oleh Google. Sistem telah memperbarui konfigurasi, silakan coba kembali.";
+            } else if (
+              innerMsg.includes("API key not valid") ||
+              innerMsg.includes("API_KEY_INVALID")
+            ) {
+              message =
+                "Kunci Google Gemini API tidak valid. Periksa kunci kamu di menu Pengaturan.";
+            } else if (
+              innerMsg.includes("quota") ||
+              innerMsg.includes("RESOURCE_EXHAUSTED")
+            ) {
+              message =
+                "Batas kuota gratis Google Gemini API kamu telah tercapai sementara. Coba beberapa saat lagi.";
+            } else {
+              message = `Layanan AI: ${innerMsg}`;
+            }
+          }
+        }
+      } catch {
+        // Biarkan pesan fallback
+      }
+    }
+
     return reply.status(statusCode).send({
       success: false,
       error: {
         code: errObj?.code ?? "INTERNAL_SERVER_ERROR",
-        message: errObj?.message || "Terjadi kesalahan pada server.",
+        message,
         details: [],
       },
     });

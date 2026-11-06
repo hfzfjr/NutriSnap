@@ -64,6 +64,92 @@ export const geminiFoodScanSchema: Schema = {
   required: ["mealTitle", "items", "nutritionNotes"],
 };
 
+export function humanizeGeminiError(error: unknown): Error {
+  const rawMsg = error instanceof Error ? error.message : String(error);
+
+  try {
+    const jsonStart = rawMsg.indexOf("{");
+    const jsonEnd = rawMsg.lastIndexOf("}");
+    if (jsonStart !== -1 && jsonEnd > jsonStart) {
+      const parsed = JSON.parse(rawMsg.substring(jsonStart, jsonEnd + 1)) as {
+        error?: { code?: number; message?: string; status?: string };
+        message?: string;
+        code?: number;
+      };
+      const err = parsed.error || parsed;
+      const code = err.code;
+      const status = (err as { status?: string }).status;
+      const msg = String(err.message || "");
+
+      if (
+        code === 404 ||
+        status === "NOT_FOUND" ||
+        msg.includes("no longer available") ||
+        msg.includes("not found")
+      ) {
+        const e = new Error(
+          "Model Gemini AI telah dialihkan ke gemini-3.8-flash oleh Google. Sistem telah memperbarui konfigurasi, silakan coba pindai kembali."
+        ) as Error & { statusCode?: number; code?: string };
+        e.statusCode = 400;
+        e.code = "GEMINI_MODEL_UNAVAILABLE";
+        return e;
+      }
+      if (
+        code === 403 ||
+        status === "PERMISSION_DENIED" ||
+        msg.includes("API_KEY_INVALID") ||
+        msg.includes("API key not valid")
+      ) {
+        const e = new Error(
+          "Kunci Google Gemini API kamu tidak valid atau tidak memiliki izin akses. Silakan periksa kunci di menu Pengaturan."
+        ) as Error & { statusCode?: number; code?: string };
+        e.statusCode = 400;
+        e.code = "GEMINI_KEY_INVALID";
+        return e;
+      }
+      if (
+        code === 429 ||
+        status === "RESOURCE_EXHAUSTED" ||
+        msg.includes("quota") ||
+        msg.includes("rate limit")
+      ) {
+        const e = new Error(
+          "Batas kuota gratis Google Gemini API kamu telah tercapai sementara waktu. Mohon tunggu 1-2 menit sebelum mencoba lagi."
+        ) as Error & { statusCode?: number; code?: string };
+        e.statusCode = 429;
+        e.code = "GEMINI_RATE_LIMIT";
+        return e;
+      }
+      if (code === 400 || status === "INVALID_ARGUMENT") {
+        const e = new Error(
+          "Format foto makanan tidak dapat dianalisis oleh AI. Pastikan foto jelas dan cukup terang."
+        ) as Error & { statusCode?: number; code?: string };
+        e.statusCode = 400;
+        e.code = "GEMINI_INVALID_INPUT";
+        return e;
+      }
+      if (msg) {
+        const e = new Error(`Gagal memproses dengan Gemini AI: ${msg}`) as Error & {
+          statusCode?: number;
+          code?: string;
+        };
+        e.statusCode = 502;
+        e.code = "GEMINI_UPSTREAM_ERROR";
+        return e;
+      }
+    }
+  } catch {
+    // rawMsg bukan JSON valid
+  }
+
+  const e = new Error(
+    rawMsg || "Terjadi kesalahan saat memproses foto makanan dengan Google Gemini AI."
+  ) as Error & { statusCode?: number; code?: string };
+  e.statusCode = 500;
+  e.code = "GEMINI_SCAN_FAILED";
+  return e;
+}
+
 function parseBase64DataUrl(imageBase64: string): {
   mimeType: string;
   base64Data: string;
@@ -150,28 +236,68 @@ export async function analyzeFoodPhotoWithGemini(params: {
     .filter(Boolean)
     .join(" ");
 
-  const response = await clientBundle.ai.models.generateContent({
-    model: clientBundle.model,
-    contents: [
-      {
-        role: "user",
-        parts: [
-          {
-            inlineData: {
-              mimeType,
-              data: base64Data,
+  let response;
+  try {
+    response = await clientBundle.ai.models.generateContent({
+      model: clientBundle.model,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              inlineData: {
+                mimeType,
+                data: base64Data,
+              },
             },
-          },
-          { text: promptText },
-        ],
+            { text: promptText },
+          ],
+        },
+      ],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: geminiFoodScanSchema,
+        temperature: 0.2,
       },
-    ],
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: geminiFoodScanSchema,
-      temperature: 0.2,
-    },
-  });
+    });
+  } catch (initialErr) {
+    const errStr = String(initialErr);
+    // Jika model sebelumnya tidak tersedia (misal gemini-2.5-flash) dan belum memakai 3.8-flash, coba sekali lagi dengan 3.8-flash
+    if (
+      clientBundle.model !== "gemini-3.8-flash" ||
+      errStr.includes("no longer available") ||
+      errStr.includes("404")
+    ) {
+      try {
+        response = await clientBundle.ai.models.generateContent({
+          model: "gemini-3.8-flash",
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  inlineData: {
+                    mimeType,
+                    data: base64Data,
+                  },
+                },
+                { text: promptText },
+              ],
+            },
+          ],
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: geminiFoodScanSchema,
+            temperature: 0.2,
+          },
+        });
+      } catch (retryErr) {
+        throw humanizeGeminiError(retryErr);
+      }
+    } else {
+      throw humanizeGeminiError(initialErr);
+    }
+  }
 
   const rawText = response.text;
   if (!rawText) {

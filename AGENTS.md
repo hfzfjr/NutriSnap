@@ -81,7 +81,7 @@ nutrisnap/
 
 ### 4.2. Integrasi Google Gemini AI (`@google/genai`)
 - Gunakan SDK resmi terbaru `@google/genai` (bukan SDK lama `@google/generative-ai` yang sudah *deprecated*).
-- Model default untuk kecepatan dan efisiensi multimodal: `gemini-2.5-flash`.
+- Model default untuk kecepatan dan efisiensi multimodal: `gemini-3.8-flash` (dengan fallback/dukungan `gemini-3.8-pro`).
 - Untuk **AI Food Photo Scanner**, wajib menggunakan **Structured Outputs** (`responseMimeType: "application/json"` dan `responseSchema`) agar output selalu berupa JSON terstruktur yang valid dan sesuai dengan kontrak di `packages/shared`.
 - Untuk **AI Bulking/Diet Chatbot**, injeksikan ringkasan profil pengguna (target bulking/cutting, target kalori/protein harian, dan progres makan hari ini) ke dalam `systemInstruction` agar jawaban AI selalu kontekstual dan dipersonalisasi.
 

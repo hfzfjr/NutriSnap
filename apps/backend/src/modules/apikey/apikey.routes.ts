@@ -17,9 +17,17 @@ async function verifyGeminiApiKeyLive(
     return apiKey.length >= 20;
   }
 
+  // Model gemini-2.5-flash dinonaktifkan Google untuk pengguna baru, arahkan ke gemini-3.8-flash
+  const targetModel =
+    modelName === "gemini-2.5-flash" || !modelName
+      ? "gemini-3.8-flash"
+      : modelName === "gemini-2.5-pro"
+      ? "gemini-3.8-pro"
+      : modelName;
+
   try {
     const ai = new GoogleGenAI({ apiKey });
-    await ai.models.get({ model: modelName });
+    await ai.models.get({ model: targetModel });
     return true;
   } catch {
     return false;
@@ -41,9 +49,32 @@ export async function getDecryptedUserGeminiClient(userId: string): Promise<{
 
   const plainApiKey = decryptApiKey(keyRecord.encryptedKey);
   const ai = new GoogleGenAI({ apiKey: plainApiKey });
+
+  // Migrasi otomatis: Google telah membatasi gemini-2.5-flash untuk pengguna baru
+  let model = keyRecord.preferredModel || "gemini-3.8-flash";
+  let needsDbUpdate = false;
+  if (model === "gemini-2.5-flash") {
+    model = "gemini-3.8-flash";
+    needsDbUpdate = true;
+  } else if (model === "gemini-2.5-pro") {
+    model = "gemini-3.8-pro";
+    needsDbUpdate = true;
+  }
+
+  if (needsDbUpdate) {
+    void repository
+      .upsertUserApiKey(userId, {
+        encryptedKey: keyRecord.encryptedKey,
+        keyHint: keyRecord.keyHint,
+        preferredModel: model,
+        isValid: keyRecord.isValid,
+      })
+      .catch(() => {});
+  }
+
   return {
     ai,
-    model: keyRecord.preferredModel || "gemini-2.5-flash",
+    model,
   };
 }
 
@@ -54,6 +85,12 @@ export async function registerApiKeyRoutes(app: FastifyInstance): Promise<void> 
     if (!user) return;
 
     const record = await repository.getUserApiKey(user.id);
+    let preferredModel = record?.preferredModel ?? "gemini-3.8-flash";
+    if (preferredModel === "gemini-2.5-flash") {
+      preferredModel = "gemini-3.8-flash";
+    } else if (preferredModel === "gemini-2.5-pro") {
+      preferredModel = "gemini-3.8-pro";
+    }
 
     return {
       success: true,
@@ -61,7 +98,7 @@ export async function registerApiKeyRoutes(app: FastifyInstance): Promise<void> 
         hasKey: Boolean(record),
         isValid: Boolean(record?.isValid),
         keyHint: record?.keyHint ?? null,
-        preferredModel: record?.preferredModel ?? "gemini-2.5-flash",
+        preferredModel,
         lastVerifiedAt: record?.lastVerifiedAt
           ? record.lastVerifiedAt.toISOString()
           : null,
@@ -130,7 +167,7 @@ export async function registerApiKeyRoutes(app: FastifyInstance): Promise<void> 
         hasKey: false,
         isValid: false,
         keyHint: null,
-        preferredModel: "gemini-2.5-flash",
+        preferredModel: "gemini-3.8-flash",
         lastVerifiedAt: null,
       },
       meta: { timestamp: new Date().toISOString() },

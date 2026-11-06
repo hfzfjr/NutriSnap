@@ -123,13 +123,36 @@ export async function apiFetch<T>(
   }
 
   if (!response.ok || !json?.success) {
+    let errorMessage =
+      json?.error?.message ??
+      (response.status === 401
+        ? "Sesi telah berakhir. Silakan masuk kembali."
+        : `Permintaan gagal (${response.status}).`);
+
+    // Bersihkan jika pesan error berupa JSON string mentah dari pihak ketiga
+    if (
+      typeof errorMessage === "string" &&
+      (errorMessage.startsWith("{") || errorMessage.includes('"error":'))
+    ) {
+      try {
+        const jsonStart = errorMessage.indexOf("{");
+        const jsonEnd = errorMessage.lastIndexOf("}");
+        if (jsonStart !== -1 && jsonEnd > jsonStart) {
+          const parsed = JSON.parse(
+            errorMessage.substring(jsonStart, jsonEnd + 1)
+          ) as { error?: { message?: string }; message?: string };
+          errorMessage =
+            parsed?.error?.message || parsed?.message || errorMessage;
+        }
+      } catch {
+        // Abaikan
+      }
+    }
+
     throw new ApiError(
       response.status,
       json?.error?.code ?? "UNKNOWN_ERROR",
-      json?.error?.message ??
-        (response.status === 401
-          ? "Sesi telah berakhir. Silakan masuk kembali."
-          : `Permintaan gagal (${response.status}).`),
+      errorMessage,
       json?.error?.details
     );
   }

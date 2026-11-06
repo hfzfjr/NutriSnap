@@ -188,7 +188,7 @@ export async function ensureDatabaseReady(): Promise<boolean> {
         user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
         encrypted_key TEXT NOT NULL,
         key_hint VARCHAR(32) NOT NULL,
-        preferred_model VARCHAR(64) NOT NULL DEFAULT 'gemini-2.5-flash',
+        preferred_model VARCHAR(64) NOT NULL DEFAULT 'gemini-3.8-flash',
         is_valid BOOLEAN NOT NULL DEFAULT TRUE,
         last_verified_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

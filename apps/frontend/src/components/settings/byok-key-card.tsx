@@ -35,8 +35,8 @@ export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
   const [apiKeyInput, setApiKeyInput] = React.useState("");
   const [showKey, setShowKey] = React.useState(false);
   const [preferredModel, setPreferredModel] = React.useState<
-    "gemini-2.5-flash" | "gemini-2.5-pro"
-  >("gemini-2.5-flash");
+    "gemini-3.8-flash" | "gemini-3.8-pro"
+  >("gemini-3.8-flash");
   const [isLoading, setIsLoading] = React.useState(false);
 
   const loadStatus = React.useCallback(async () => {
@@ -44,10 +44,19 @@ export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
       const data = await apiFetch<ApiKeyStatusResponse>("/apikey/status");
       setStatus(data);
       if (
+        data.preferredModel === "gemini-3.8-flash" ||
+        data.preferredModel === "gemini-3.8-pro"
+      ) {
+        setPreferredModel(data.preferredModel);
+      } else if (
         data.preferredModel === "gemini-2.5-flash" ||
         data.preferredModel === "gemini-2.5-pro"
       ) {
-        setPreferredModel(data.preferredModel);
+        setPreferredModel(
+          data.preferredModel === "gemini-2.5-pro"
+            ? "gemini-3.8-pro"
+            : "gemini-3.8-flash"
+        );
       }
     } catch {
       // Abaikan jika belum login
@@ -234,28 +243,28 @@ export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
             <label className="text-xs font-medium text-foreground">
               Model Gemini Pilihan
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant={
-                  preferredModel === "gemini-2.5-flash" ? "default" : "outline"
+                  preferredModel === "gemini-3.8-flash" ? "default" : "outline"
                 }
                 size="sm"
-                onClick={() => setPreferredModel("gemini-2.5-flash")}
-                className="text-xs justify-center"
+                onClick={() => setPreferredModel("gemini-3.8-flash")}
+                className="text-xs justify-center text-center py-2 h-auto"
               >
-                gemini-2.5-flash (Cepat & Hemat)
+                gemini-3.8-flash (Cepat & Hemat — Rekomendasi)
               </Button>
               <Button
                 type="button"
                 variant={
-                  preferredModel === "gemini-2.5-pro" ? "default" : "outline"
+                  preferredModel === "gemini-3.8-pro" ? "default" : "outline"
                 }
                 size="sm"
-                onClick={() => setPreferredModel("gemini-2.5-pro")}
-                className="text-xs justify-center"
+                onClick={() => setPreferredModel("gemini-3.8-pro")}
+                className="text-xs justify-center text-center py-2 h-auto"
               >
-                gemini-2.5-pro (Presisi)
+                gemini-3.8-pro (Presisi Tinggi)
               </Button>
             </div>
           </div>

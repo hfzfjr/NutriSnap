@@ -81,7 +81,7 @@ export const userApiKeys = pgTable(
     encryptedKey: text("encrypted_key").notNull(),
     keyHint: varchar("key_hint", { length: 32 }).notNull(),
     preferredModel: varchar("preferred_model", { length: 64 })
-      .default("gemini-2.5-flash")
+      .default("gemini-3.8-flash")
       .notNull(),
     isValid: boolean("is_valid").default(true).notNull(),
     lastVerifiedAt: timestamp("last_verified_at", { withTimezone: true }).defaultNow(),

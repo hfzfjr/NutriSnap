@@ -37,7 +37,7 @@ function buildContextualFallbackReply(params: {
       : `Target protein harian Anda hampir terpenuhi (sisa **${remainingProteinG}g protein**). Anda cukup memilih porsi seimbang seperti tahu/tempe kukus atau telur rebus.`;
 
   const keyNotice = !hasKey
-    ? "\n\n*(Catatan: Anda saat ini menggunakan Smart Nutrition Engine bawaan. Tambahkan Google Gemini API Key pribadi Anda di menu Settings untuk mengaktifkan diskusi AI Gemini 2.5 Flash tanpa batas!)*"
+    ? "\n\n*(Catatan: Anda saat ini menggunakan Smart Nutrition Engine bawaan. Tambahkan Google Gemini API Key pribadi Anda di menu Pengaturan untuk mengaktifkan diskusi AI Gemini 3.8 Flash tanpa batas!)*"
     : "";
 
   return `Halo **${userName}**! Berdasarkan profil **${modeLabel}** Anda hari ini:\n\n${proteinTips}${keyNotice}`;

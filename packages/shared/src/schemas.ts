@@ -53,8 +53,8 @@ export const upsertApiKeySchema = z.object({
     .min(20, "Format Gemini API Key terlalu pendek")
     .max(256, "Format Gemini API Key terlalu panjang"),
   preferredModel: z
-    .enum(["gemini-2.5-flash", "gemini-2.5-pro"])
-    .default("gemini-2.5-flash"),
+    .enum(["gemini-3.8-flash", "gemini-3.8-pro", "gemini-2.5-flash", "gemini-2.5-pro"])
+    .default("gemini-3.8-flash"),
 });
 
 export type UpsertApiKeyInput = z.infer<typeof upsertApiKeySchema>;
