@@ -239,7 +239,7 @@ export default function OnboardingPage() {
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Contoh: Raka Pratama"
+                placeholder="Contoh: Budi Santoso"
               />
             </Field>
 

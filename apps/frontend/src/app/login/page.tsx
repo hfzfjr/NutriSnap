@@ -77,7 +77,7 @@ export default function LoginPage() {
       }>("/auth/google/token", {
         method: "POST",
         body: JSON.stringify({
-          googleId: "google-dev-user-001",
+          googleId: "local-dev-account-01",
           email: "dev@nutrisnap.local",
           name: "Pengguna Dev",
         }),

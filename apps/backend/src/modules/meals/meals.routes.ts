@@ -135,7 +135,38 @@ export async function registerMealRoutes(app: FastifyInstance): Promise<void> {
     };
   });
 
-  // 5. DELETE /api/v1/meals/:id
+  // 5. PATCH /api/v1/meals/:id
+  app.patch("/api/v1/meals/:id", async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, reply);
+    if (!user) return;
+
+    const params = request.params as { id: string };
+    const body = (request.body ?? {}) as {
+      title?: string;
+      mealType?: "breakfast" | "lunch" | "dinner" | "snack";
+      aiNotes?: string | null;
+    };
+
+    const updated = await repository.updateMealLog(user.id, params.id, body);
+    if (!updated) {
+      return reply.status(404).send({
+        success: false,
+        error: {
+          code: "MEAL_LOG_NOT_FOUND",
+          message: "Catatan makanan tidak ditemukan.",
+          details: [],
+        },
+      });
+    }
+
+    return {
+      success: true,
+      data: { meal: updated },
+      meta: { timestamp: new Date().toISOString() },
+    };
+  });
+
+  // 6. DELETE /api/v1/meals/:id
   app.delete("/api/v1/meals/:id", async (request, reply) => {
     const user = await requireAuthenticatedUser(request, reply);
     if (!user) return;
