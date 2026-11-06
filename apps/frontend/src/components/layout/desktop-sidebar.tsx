@@ -46,9 +46,7 @@ export function DesktopSidebar() {
       <div className="flex-1 space-y-1.5 px-3 py-4">
         {sidebarLinks.map((item) => {
           const Icon = item.icon;
-          const isActive =
-            pathname === item.href ||
-            (item.href === "/dashboard" && pathname === "/");
+          const isActive = pathname === item.href;
 
           return (
             <Link

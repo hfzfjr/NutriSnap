@@ -30,9 +30,7 @@ export function BottomNav() {
       <div className="grid h-full grid-cols-5 items-center max-w-md mx-auto px-2">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive =
-            pathname === item.href ||
-            (item.href === "/dashboard" && pathname === "/");
+          const isActive = pathname === item.href;
 
           if (item.isPrimaryAction) {
             return (

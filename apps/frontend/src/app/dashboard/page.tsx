@@ -176,18 +176,65 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 bg-secondary/60 rounded-xl p-1 border border-border">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 text-xs"
+              onClick={() => {
+                const d = new Date(selectedDate);
+                d.setDate(d.getDate() - 1);
+                setSelectedDate(d.toISOString().slice(0, 10));
+              }}
+              title="Hari Sebelumnya"
+            >
+              &larr;
+            </Button>
+            <Button
+              type="button"
+              variant={
+                selectedDate === new Date().toISOString().slice(0, 10)
+                  ? "secondary"
+                  : "ghost"
+              }
+              size="sm"
+              className="h-8 px-2.5 text-xs font-semibold"
+              onClick={() =>
+                setSelectedDate(new Date().toISOString().slice(0, 10))
+              }
+            >
+              Hari Ini
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 text-xs"
+              onClick={() => {
+                const d = new Date(selectedDate);
+                d.setDate(d.getDate() + 1);
+                setSelectedDate(d.toISOString().slice(0, 10));
+              }}
+              title="Hari Berikutnya"
+            >
+              &rarr;
+            </Button>
+          </div>
+
           <div className="relative flex items-center">
             <Calendar className="h-4 w-4 text-muted-foreground absolute left-3 pointer-events-none" />
             <Input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="pl-9 w-44 h-10 text-xs"
+              className="pl-9 w-40 h-9 text-xs"
             />
           </div>
+
           <Link href="/log">
-            <Button size="sm" className="h-10 gap-1.5">
+            <Button size="sm" className="h-9 gap-1.5 shadow-sm">
               <Camera className="h-4 w-4" />
               + Scan / Log
             </Button>
@@ -337,7 +384,7 @@ export default function DashboardPage() {
                       {sectionCalories} kcal • {sectionProtein.toFixed(1)}g Protein
                     </CardDescription>
                   </div>
-                  <Link href="/log">
+                  <Link href={`/log?mealType=${section.key}`}>
                     <Button variant="outline" size="sm" className="gap-1">
                       <Plus className="h-3.5 w-3.5" />
                       Tambah

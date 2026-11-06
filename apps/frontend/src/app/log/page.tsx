@@ -75,6 +75,19 @@ export default function DualMealLoggerPage() {
   } | null>(null);
 
   React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const paramMealType = params.get("mealType");
+      if (
+        paramMealType === "breakfast" ||
+        paramMealType === "lunch" ||
+        paramMealType === "dinner" ||
+        paramMealType === "snack"
+      ) {
+        setMealType(paramMealType);
+      }
+    }
+
     const token = getStoredAuthToken();
     if (!token) {
       void apiFetch<{ token: string }>("/auth/google/token", {
@@ -563,6 +576,27 @@ export default function DualMealLoggerPage() {
                       setManualWeightGrams(val);
                     }}
                   />
+                  <div className="flex gap-1 pt-0.5">
+                    {[100, 150, 200, 250].map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => {
+                          setManualWeightGrams(g);
+                          if (manualFoodName.trim()) {
+                            void handleEstimateManualMacros(manualFoodName, g);
+                          }
+                        }}
+                        className={`px-1.5 py-0.5 rounded text-[10px] border transition-colors ${
+                          manualWeightGrams === g
+                            ? "bg-primary text-primary-foreground border-primary font-semibold"
+                            : "bg-secondary/70 text-muted-foreground hover:text-foreground border-border"
+                        }`}
+                      >
+                        {g}g
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

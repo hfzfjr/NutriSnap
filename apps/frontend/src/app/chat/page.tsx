@@ -57,6 +57,11 @@ export default function AiDietCoachChatPage() {
   >(null);
   const [inputText, setInputText] = React.useState("");
   const [isSending, setIsSending] = React.useState(false);
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isSending]);
 
   const loadHistory = React.useCallback(async () => {
     try {
@@ -244,6 +249,16 @@ export default function AiDietCoachChatPage() {
                 </div>
               ))
             )}
+
+            {isSending && (
+              <div className="flex gap-2.5 items-center text-xs text-muted-foreground animate-pulse">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                  <BotMessageSquare className="h-4 w-4" />
+                </div>
+                <span>Gemini Coach sedang menganalisis menu terbaik...</span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
 
           <form

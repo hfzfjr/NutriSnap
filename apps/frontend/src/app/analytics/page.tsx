@@ -199,27 +199,34 @@ export default function AnalyticsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {(data?.weeklySummary ?? []).map((day) => {
-              const pct = Math.min(
-                100,
-                Math.round((day.calories / Math.max(1, targetCalories)) * 100)
-              );
-              return (
-                <div key={day.date} className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="font-medium tabular-nums">{day.date}</span>
-                    <span className="text-muted-foreground tabular-nums">
-                      <strong className="text-foreground">{day.calories}</strong>{" "}
-                      / {targetCalories} kcal •{" "}
-                      <strong className="text-indigo-500">
-                        {day.proteinG}g P
-                      </strong>
-                    </span>
+            {(data?.weeklySummary ?? []).length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground space-y-1">
+                <p className="font-semibold text-foreground">Belum ada riwayat makan 7 hari terakhir.</p>
+                <p>Catat makanan harian Anda di menu Scan / Log untuk melihat grafik kepatuhan kalori & protein.</p>
+              </div>
+            ) : (
+              (data?.weeklySummary ?? []).map((day) => {
+                const pct = Math.min(
+                  100,
+                  Math.round((day.calories / Math.max(1, targetCalories)) * 100)
+                );
+                return (
+                  <div key={day.date} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-medium tabular-nums">{day.date}</span>
+                      <span className="text-muted-foreground tabular-nums">
+                        <strong className="text-foreground">{day.calories}</strong>{" "}
+                        / {targetCalories} kcal •{" "}
+                        <strong className="text-indigo-500">
+                          {day.proteinG}g P
+                        </strong>
+                      </span>
+                    </div>
+                    <Progress value={pct} indicatorClassName="bg-emerald-500" />
                   </div>
-                  <Progress value={pct} indicatorClassName="bg-emerald-500" />
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </CardContent>
         </Card>
 
