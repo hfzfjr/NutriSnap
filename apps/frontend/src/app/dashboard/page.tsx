@@ -435,12 +435,12 @@ export default function DashboardPage() {
 
       {/* Shortcut to AI Coach */}
       <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3.5 p-4 md:py-4 md:px-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
               <BotMessageSquare className="h-5 w-5" />
             </div>
-            <div>
+            <div className="space-y-0.5">
               <h4 className="text-sm font-semibold text-foreground">
                 Bingung memilih menu makan berikutnya?
               </h4>
@@ -450,12 +450,12 @@ export default function DashboardPage() {
             </div>
           </div>
           <Link href="/chat" className="shrink-0">
-            <Button size="sm" className="gap-1.5 shadow-sm">
+            <Button size="sm" className="gap-1.5 shadow-sm min-h-[36px]">
               <Sparkles className="h-4 w-4" />
               Tanya Coach AI
             </Button>
           </Link>
-        </CardContent>
+        </div>
       </Card>
     </div>
   );
