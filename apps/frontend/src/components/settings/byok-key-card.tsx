@@ -199,36 +199,38 @@ export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
               <Input
                 id="gemini-key-input"
                 type={showKey ? "text" : "password"}
-                placeholder="AIzaSy..."
+                placeholder="Masukkan API Key Anda..."
                 value={apiKeyInput}
                 onChange={(e) => setApiKeyInput(e.target.value)}
                 autoComplete="off"
-                className="pr-20"
+                className="pr-28 text-base md:text-sm font-mono"
               />
-              <div className="absolute right-1.5 flex items-center gap-1">
+              <div className="absolute right-1.5 flex items-center gap-0.5">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                   onClick={() => setShowKey(!showKey)}
                   aria-label={showKey ? "Sembunyikan kunci" : "Tampilkan kunci"}
+                  title={showKey ? "Sembunyikan kunci" : "Tampilkan kunci"}
                 >
                   {showKey ? (
-                    <EyeOff className="h-3.5 w-3.5" />
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <Eye className="h-3.5 w-3.5" />
+                    <Eye className="h-4 w-4" />
                   )}
                 </Button>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                  className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
                   onClick={() => void handlePaste()}
+                  title="Tempel dari clipboard"
                 >
-                  <Clipboard className="mr-1 h-3 w-3" />
-                  Tempel
+                  <Clipboard className="h-3.5 w-3.5" />
+                  <span>Tempel</span>
                 </Button>
               </div>
             </div>
