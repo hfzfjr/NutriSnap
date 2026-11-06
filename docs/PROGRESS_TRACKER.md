@@ -67,8 +67,8 @@
 - [x] **`NS-603`** — Fase 2: App shell, navigasi berbahasa Indonesia, safe-area, status API key nyata, `loading/error/not-found`, `PwaManager` global + Install Banner — **DONE**
 - [x] **`NS-604`** — Fase 3: Landing page ditulis ulang (copy final, mockup nyata, kalkulator tervalidasi, `/privacy`, `/terms`) — **DONE**
 - [x] **`NS-605`** — Fase 4: Login & Onboarding (form kosong, mode edit, validasi, guardrail bisa ditindaklanjuti, 5 tingkat aktivitas) — **DONE**
-- [/] **`NS-606`** — Fase 5: Beranda & `CalorieRing` (status berikon, timeline waktu makan, empty/loading/error state, hapus + urungkan) — **IN_PROGRESS**
-- [ ] **`NS-607`** — Fase 6: Halaman Catat (galeri + kamera, edit hasil scan, skala per-gram, banner API key, form kosong) — **TODO**
+- [x] **`NS-606`** — Fase 5: Beranda & `CalorieRing` (status berikon, timeline waktu makan, empty/loading/error state, hapus + urungkan) — **DONE**
+- [/] **`NS-607`** — Fase 6: Halaman Catat (galeri + kamera, edit hasil scan, skala per-gram, banner API key, form kosong) — **IN_PROGRESS**
 - [ ] **`NS-608`** — Fase 7: Coach AI (Markdown, pesan optimistis, quick prompt dinamis, layout penuh layar) — **TODO**
 - [ ] **`NS-609`** — Fase 8: Progres (grafik berat, 7 hari lengkap, tanpa fallback palsu) — **TODO**
 - [ ] **`NS-610`** — Fase 9: Pengaturan & PWA (Switch pengingat, zona waktu, tanpa langganan palsu, kartu API key baru) — **TODO**
@@ -92,3 +92,4 @@
 | `2026-11-06` | `NS-603` | Merampungkan **Fase 2 (App Shell & Navigation)** pada branch `feat/sprint-6`: Navigasi bawah berbahasa Indonesia (`Beranda`, `Progres`, `Catat`, `Coach`, `Pengaturan`) dengan safe area dan touch targets $\ge 44 \times 44\text{ px}$, Desktop Sidebar dengan Logomark resmi + live Gemini BYOK status + user profile logout, error boundaries (`not-found.tsx`, `error.tsx`, `loading.tsx`), serta `InstallBanner` PWA non-intrusif. | Principal Architect Agent |
 | `2026-11-06` | `NS-604` | Menyelesaikan **Fase 3 (Landing Page & Legal Pages)** pada branch `feat/sprint-6`: Penulisan ulang landing page modular (`navbar`, `hero`, `interactive-demo`, `quick-calculator`, `features-grid`, `faq`, `footer`), penyediaan halaman legal `/privacy` dan `/terms` dengan penafian medis resmi, serta pembersihan total seluruh warna hardcoded dari halaman depan. | Principal Architect Agent |
 | `2026-11-06` | `NS-605` | Merampungkan **Fase 4 (Login & Onboarding Refactor)** pada branch `feat/sprint-6`: Pembaruan halaman Onboarding 4 langkah dengan deteksi mode edit dari profil aktif, 5 tingkat aktivitas harian lengkap (BMR x 1.2 hingga 1.9), validasi rentang fisik, tombol aksi penyesuaian durasi otomatis pada guardrail kalori, serta alur pendaftaran mulus tanpa akun palsu. | Principal Architect Agent |
+| `2026-11-06` | `NS-606` | Menyelesaikan **Fase 5 (Beranda & CalorieRing Refactor)** pada branch `feat/sprint-6`: Sapaan berbasis jam lokal ("Selamat Pagi/Siang/Sore/Malam, [Nama]"), integrasi `StatusPill` dan `MacroBar`, 4 kartu sesi makan dengan tombol aksi cepat, toast penghapusan informatif via Sonner, serta EmptyState & Error Retry State tanpa nilai dummy. | Principal Architect Agent |

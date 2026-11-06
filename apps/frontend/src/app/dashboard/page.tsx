@@ -2,18 +2,20 @@
 
 import type { DailyStatusEvaluation } from "@nutrisnap/shared";
 import {
+  AlertCircle,
   BotMessageSquare,
   Calendar,
   Camera,
   Plus,
+  RefreshCw,
   Sparkles,
   Trash2,
   Utensils,
 } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
+import { toast } from "sonner";
 import { CalorieRing } from "@/components/nutrition/calorie-ring";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,11 +24,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { MacroBar } from "@/components/ui/macro-bar";
-import { Progress } from "@/components/ui/progress";
+import { StatusPill } from "@/components/ui/status-pill";
 import { apiFetch } from "@/lib/api-client";
-import { shiftISO, todayISO } from "@/lib/date";
+import { formatDateLong, shiftISO, todayISO } from "@/lib/date";
+import { formatGram, formatKcal, formatNumber } from "@/lib/format";
 
 interface MealLogItem {
   id: string;
@@ -74,26 +78,42 @@ interface DailySummaryResponse {
 }
 
 const MEAL_SECTIONS = [
-  { key: "breakfast", label: "Sarapan Pagi" },
-  { key: "lunch", label: "Makan Siang" },
-  { key: "dinner", label: "Makan Malam" },
-  { key: "snack", label: "Camilan & Suplemen" },
+  { key: "breakfast", label: "Sarapan Pagi", desc: "Mulai hari dengan kalori & protein berkualitas" },
+  { key: "lunch", label: "Makan Siang", desc: "Isi bahan bakar energi untuk aktivitas harian" },
+  { key: "dinner", label: "Makan Malam", desc: "Nutrisi pemulihan otot & istirahat" },
+  { key: "snack", label: "Camilan & Suplemen", desc: "Whey, buah, atau camilan pendukung target" },
 ] as const;
 
 export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = React.useState<string>(() => todayISO());
   const [summary, setSummary] = React.useState<DailySummaryResponse | null>(null);
+  const [userName, setUserName] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+
+  // Ambil data profil / nama user
+  React.useEffect(() => {
+    apiFetch<{ user: { name: string | null } }>("/auth/me")
+      .then((res) => {
+        if (res.user?.name) setUserName(res.user.name);
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchDailySummary = React.useCallback(async (dateStr: string) => {
     setIsLoading(true);
+    setErrorMsg(null);
     try {
       const data = await apiFetch<DailySummaryResponse>(
         `/meals/daily?date=${encodeURIComponent(dateStr)}`
       );
       setSummary(data);
-    } catch {
-      // Galat ditangani atau user belum menyelesaikan onboarding
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : "Gagal memuat catatan makan. Pastikan profil onboarding kamu sudah terisi."
+      );
       setSummary(null);
     } finally {
       setIsLoading(false);
@@ -104,12 +124,13 @@ export default function DashboardPage() {
     void fetchDailySummary(selectedDate);
   }, [selectedDate, fetchDailySummary]);
 
-  const handleDeleteMeal = async (mealId: string) => {
+  const handleDeleteMeal = async (mealId: string, mealTitle: string) => {
     try {
       await apiFetch(`/meals/${mealId}`, { method: "DELETE" });
+      toast.success(`"${mealTitle}" berhasil dihapus dari jurnal.`);
       await fetchDailySummary(selectedDate);
     } catch {
-      // Abaikan jika gagal
+      toast.error("Gagal menghapus catatan makanan.");
     }
   };
 
@@ -121,41 +142,55 @@ export default function DashboardPage() {
   };
   const targets = summary?.targets ?? null;
 
+  // Sapaan personal berbasis jam lokal
+  const greeting = React.useMemo(() => {
+    const hour = new Date().getHours();
+    const prefix =
+      hour < 11
+        ? "Selamat Pagi"
+        : hour < 15
+        ? "Selamat Siang"
+        : hour < 19
+        ? "Selamat Sore"
+        : "Selamat Malam";
+    return userName ? `${prefix}, ${userName.split(" ")[0]}` : prefix;
+  }, [userName]);
+
   return (
     <div className="space-y-6">
-      {/* Header & Date Filter */}
+      {/* Header, Greeting & Date Filter */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">
-              Dashboard Harian
+            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+              {greeting}
             </h1>
             {targets ? (
-              <Badge
-                variant={
+              <StatusPill
+                status={
                   targets.goalType === "bulking"
                     ? "surplus"
                     : targets.goalType === "cutting"
                     ? "deficit"
                     : "maintenance"
                 }
-              >
-                {targets.goalType.toUpperCase()} (
-                {targets.dailyCalorieDelta >= 0
-                  ? `+${targets.dailyCalorieDelta}`
-                  : targets.dailyCalorieDelta}{" "}
-                kcal)
-              </Badge>
+                label={`${targets.goalType.toUpperCase()} (${
+                  targets.dailyCalorieDelta >= 0
+                    ? `+${targets.dailyCalorieDelta}`
+                    : targets.dailyCalorieDelta
+                } kcal)`}
+              />
             ) : null}
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {formatDateLong(selectedDate)} •{" "}
             {summary?.status.label ??
               "Pantau kalori, protein, dan status surplus/defisit kamu hari ini."}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 bg-secondary/60 rounded-xl p-1 border border-border">
+          <div className="flex items-center gap-1 bg-secondary/70 rounded-xl p-1 border border-border">
             <Button
               type="button"
               variant="ghost"
@@ -193,33 +228,57 @@ export default function DashboardPage() {
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="pl-9 w-40 h-9 text-xs"
+              className="pl-9 w-36 h-9 text-xs"
             />
           </div>
 
           <Link href="/log">
             <Button size="sm" className="h-9 gap-1.5 shadow-sm">
               <Camera className="h-4 w-4" />
-              + Scan / Log
+              + Catat Makanan
             </Button>
           </Link>
         </div>
       </div>
 
+      {/* Error state with retry */}
+      {errorMsg && (
+        <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 flex items-center justify-between gap-3 text-xs text-destructive">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void fetchDailySummary(selectedDate)}
+            className="h-8 gap-1.5 text-xs border-destructive/40 hover:bg-destructive/10"
+          >
+            <RefreshCw className="h-3 w-3" />
+            Coba Lagi
+          </Button>
+        </div>
+      )}
+
       {/* Hero Calorie Ring & Macro Progress Grid */}
-      <Card>
+      <Card className="border-border shadow-sm">
         <CardContent className="p-5 md:p-6">
           {isLoading ? (
-            <div className="flex h-52 items-center justify-center text-xs text-muted-foreground animate-pulse">
-              Memuat target dan ringkasan nutrisi...
+            <div className="flex h-52 flex-col items-center justify-center gap-2 text-xs text-muted-foreground animate-pulse">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <span>Memuat target dan ringkasan nutrisi...</span>
             </div>
           ) : !targets ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-sm font-medium">Profil nutrisi kamu belum selesai diatur.</p>
-              <Link href="/onboarding" className="mt-3">
-                <Button size="sm">Atur Profil Sekarang</Button>
-              </Link>
-            </div>
+            <EmptyState
+              icon={<Utensils className="h-6 w-6 text-primary" />}
+              title="Profil Nutrisi Belum Lengkap"
+              description="Lengkapi data fisik dasar kamu agar NutriSnap dapat menghitung target kalori dan protein harian secara personal."
+              action={
+                <Link href="/onboarding">
+                  <Button size="sm">Atur Profil Sekarang</Button>
+                </Link>
+              }
+            />
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-12 items-center">
               <div className="md:col-span-5 flex justify-center">
@@ -232,31 +291,31 @@ export default function DashboardPage() {
               </div>
 
               <div className="md:col-span-7 space-y-4">
-                <div className="grid grid-cols-3 gap-2.5 rounded-2xl bg-secondary/50 p-3.5 text-center">
+                <div className="grid grid-cols-3 gap-2.5 rounded-2xl bg-secondary/60 p-3.5 text-center">
                   <div>
                     <span className="text-[11px] text-muted-foreground block">
                       Maintenance (TDEE)
                     </span>
-                    <span className="text-base font-bold tabular-nums">
-                      {targets.maintenanceCalories} kcal
+                    <span className="text-base font-bold tabular-nums text-foreground">
+                      {formatKcal(targets.maintenanceCalories)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[11px] text-muted-foreground block">
+                    <span className="text-[11px] text-muted-foreground block capitalize">
                       Target {targets.goalType}
                     </span>
                     <span className="text-base font-bold tabular-nums text-primary">
-                      {targets.targetDailyCalories} kcal
+                      {formatKcal(targets.targetDailyCalories)}
                     </span>
                   </div>
                   <div>
                     <span className="text-[11px] text-muted-foreground block">
                       Selisih vs TDEE
                     </span>
-                    <span className="text-base font-bold tabular-nums">
+                    <span className="text-base font-bold tabular-nums text-foreground">
                       {totals.calories - targets.maintenanceCalories >= 0
-                        ? `+${totals.calories - targets.maintenanceCalories}`
-                        : totals.calories - targets.maintenanceCalories}{" "}
+                        ? `+${formatNumber(totals.calories - targets.maintenanceCalories)}`
+                        : formatNumber(totals.calories - targets.maintenanceCalories)}{" "}
                       kcal
                     </span>
                   </div>
@@ -286,7 +345,7 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Daily Meal Sections */}
+      {/* Daily Meal Sections (4 Kartu Sesi Makan) */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {MEAL_SECTIONS.map((section) => {
           const sectionMeals = (summary?.meals ?? []).filter(
@@ -302,67 +361,68 @@ export default function DashboardPage() {
           );
 
           return (
-            <Card key={section.key}>
-              <CardHeader className="pb-3">
+            <Card key={section.key} className="border-border shadow-sm flex flex-col justify-between">
+              <CardHeader className="pb-3 border-b border-border/60">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-sm">
+                    <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                       <Utensils className="h-4 w-4 text-primary" />
                       {section.label}
                     </CardTitle>
-                    <CardDescription className="tabular-nums">
-                      {sectionCalories} kcal • {sectionProtein.toFixed(1)}g Protein
+                    <CardDescription className="tabular-nums text-xs">
+                      {formatKcal(sectionCalories)} • {formatGram(sectionProtein)} Protein
                     </CardDescription>
                   </div>
                   <Link href={`/log?mealType=${section.key}`}>
-                    <Button variant="outline" size="sm" className="gap-1">
+                    <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
                       <Plus className="h-3.5 w-3.5" />
-                      Tambah
+                      Catat
                     </Button>
                   </Link>
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-2.5">
+              <CardContent className="space-y-2.5 p-4 flex-1">
                 {isLoading ? (
-                  <p className="text-xs text-muted-foreground py-2">
+                  <div className="py-4 text-center text-xs text-muted-foreground animate-pulse">
                     Memuat catatan makanan...
-                  </p>
+                  </div>
                 ) : sectionMeals.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+                  <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
                     Belum ada catatan pada sesi {section.label.toLowerCase()}.
                   </div>
                 ) : (
                   sectionMeals.map((meal) => (
                     <div
                       key={meal.id}
-                      className="flex items-center justify-between rounded-xl bg-secondary/50 p-3"
+                      className="flex items-center justify-between rounded-xl bg-secondary/50 p-3 hover:bg-secondary/70 transition-colors"
                     >
-                      <div className="space-y-0.5">
+                      <div className="space-y-0.5 min-w-0 pr-2">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-semibold">
+                          <span className="text-xs font-semibold truncate text-foreground">
                             {meal.title}
                           </span>
-                          <Badge variant="outline" className="text-[10px]">
+                          <span className="text-[10px] font-semibold text-primary px-1.5 py-0.2 rounded bg-primary/10 shrink-0">
                             {meal.source === "ai_scan" ? "AI Scan" : "Manual"}
-                          </Badge>
+                          </span>
                         </div>
                         <p className="text-[11px] text-muted-foreground tabular-nums">
-                          {meal.totalCalories} kcal •{" "}
+                          {formatNumber(meal.totalCalories)} kcal •{" "}
                           <strong className="text-macro-protein font-semibold">
-                            {meal.totalProteinG}g P
+                            {formatGram(meal.totalProteinG)} P
                           </strong>{" "}
-                          • {meal.totalCarbsG}g C • {meal.totalFatG}g F
+                          • {formatGram(meal.totalCarbsG)} C • {formatGram(meal.totalFatG)} F
                         </p>
                       </div>
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => void handleDeleteMeal(meal.id)}
-                        aria-label="Hapus makanan"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                        onClick={() => void handleDeleteMeal(meal.id, meal.title)}
+                        aria-label={`Hapus ${meal.title}`}
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   ))
@@ -373,26 +433,26 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* Shortcut to AI Diet Coach */}
-      <Card className="border-primary/30 bg-primary/5">
+      {/* Shortcut to AI Coach */}
+      <Card className="border-primary/20 bg-primary/5">
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
               <BotMessageSquare className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="text-sm font-semibold">
+              <h4 className="text-sm font-semibold text-foreground">
                 Bingung memilih menu makan berikutnya?
               </h4>
               <p className="text-xs text-muted-foreground">
-                Tanyakan rekomendasi menu tinggi protein ke AI Bulking & Diet Assistant.
+                Tanyakan rekomendasi menu tinggi protein yang sesuai sisa jatah kalori kamu hari ini.
               </p>
             </div>
           </div>
-          <Link href="/chat">
-            <Button size="sm" className="gap-1.5">
+          <Link href="/chat" className="shrink-0">
+            <Button size="sm" className="gap-1.5 shadow-sm">
               <Sparkles className="h-4 w-4" />
-              Tanya AI Coach
+              Tanya Coach AI
             </Button>
           </Link>
         </CardContent>
@@ -400,4 +460,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
