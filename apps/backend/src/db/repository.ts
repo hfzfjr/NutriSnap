@@ -619,6 +619,24 @@ export const repository = {
     return memoryStore.weightLogs.get(userId) ?? [];
   },
 
+  async deleteWeightLog(userId: string, id: string): Promise<boolean> {
+    if (await ensureDatabaseReady()) {
+      const res = await db
+        .delete(weightLogs)
+        .where(and(eq(weightLogs.userId, userId), eq(weightLogs.id, id)))
+        .returning();
+      return res.length > 0;
+    }
+    const list = memoryStore.weightLogs.get(userId) ?? [];
+    const idx = list.findIndex((item) => item.id === id);
+    if (idx >= 0) {
+      list.splice(idx, 1);
+      memoryStore.weightLogs.set(userId, list);
+      return true;
+    }
+    return false;
+  },
+
   async createMealLog(
     userId: string,
     input: {

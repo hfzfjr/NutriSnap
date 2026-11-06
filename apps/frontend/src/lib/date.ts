@@ -52,3 +52,12 @@ export function formatDateShort(iso: string): string {
     timeZone: "UTC",
   }).format(new Date(Date.UTC(y, m - 1, d)));
 }
+
+export function formatDayNameShort(iso: string): string {
+  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return "";
+  const { y, m, d } = parseIsoParts(iso);
+  return new Intl.DateTimeFormat("id-ID", {
+    weekday: "short",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(y, m - 1, d)));
+}

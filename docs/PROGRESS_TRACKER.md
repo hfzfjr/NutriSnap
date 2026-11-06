@@ -70,8 +70,8 @@
 - [x] **`NS-606`** — Fase 5: Beranda & `CalorieRing` (status berikon, timeline waktu makan, empty/loading/error state, hapus + urungkan) — **DONE**
 - [x] **`NS-607`** — Fase 6: Halaman Catat (galeri + kamera, edit hasil scan, skala per-gram, banner API key, form kosong) — **DONE**
 - [x] **`NS-608`** — Fase 7: Coach AI (Markdown, pesan optimistis, quick prompt dinamis, layout penuh layar) — **DONE**
-- [/] **`NS-609`** — Fase 8: Progres (grafik berat, 7 hari lengkap, tanpa fallback palsu) — **IN_PROGRESS**
-- [ ] **`NS-610`** — Fase 9: Pengaturan & PWA (Switch pengingat, zona waktu, tanpa langganan palsu, kartu API key baru) — **TODO**
+- [x] **`NS-609`** — Fase 8: Progres (grafik berat, 7 hari lengkap, tanpa fallback palsu) — **DONE**
+- [/] **`NS-610`** — Fase 9: Pengaturan & PWA (Switch pengingat, zona waktu, tanpa langganan palsu, kartu API key baru) — **IN_PROGRESS**
 - [ ] **`NS-611`** — Fase 10: QA, linter sungguhan, sinkronisasi dokumen, verifikasi backend V1–V7 — **TODO**
 
 ---
@@ -95,3 +95,4 @@
 | `2026-11-06` | `NS-606` | Menyelesaikan **Fase 5 (Beranda & CalorieRing Refactor)** pada branch `feat/sprint-6`: Sapaan berbasis jam lokal ("Selamat Pagi/Siang/Sore/Malam, [Nama]"), integrasi `StatusPill` dan `MacroBar`, 4 kartu sesi makan dengan tombol aksi cepat, toast penghapusan informatif via Sonner, serta EmptyState & Error Retry State tanpa nilai dummy. | Principal Architect Agent |
 | `2026-11-06` | `NS-607` | Merampungkan **Fase 6 (Halaman Catat Makanan / Log Refactor)** pada branch `feat/sprint-6`: Penyediaan dwi-aksi terpisah Kamera Ponsel vs Galeri Foto, banner pengingat Kunci Gemini BYOK yang ramah, inline editing judul & nama komponen hasil scan, tombol skala gramasi cepat (100g, 150g, 200g), penambahan komponen manual, input manual tanpa angka dummy, dan toast Sonner. | Principal Architect Agent |
 | `2026-11-06` | `NS-608` | Menyelesaikan **Fase 7 (Coach AI Refactor)** pada branch `feat/sprint-6`: Integrasi `react-markdown` untuk rendering jawaban terformat (bold, list, code), pesan optimistis instan saat pengguna mengirim chat, thinking bubble indicator saat menunggu respon AI, chip saran pertanyaan dinamis berbasis sisa kalori & protein hari ini, tombol konfirmasi bersihkan riwayat chat dengan toast Sonner, serta layout responsif bebas scroll ganda. | Principal Architect Agent |
+| `2026-11-06` | `NS-609` | Menyelesaikan **Fase 8 (Progres / Analytics Refactor)** pada branch `feat/sprint-6`: Pembuatan grafik SVG ringan `WeightTrendChart` dengan garis tren berat + garis putus target + tooltip aksesibel, visualisasi kepatuhan kalori 7 hari lengkap dengan penanda target harian & protein, 3 kartu statistik ringkas berstandar WHO & rumus riil tanpa angka palsu, form catat timbangan dengan toast Sonner, serta aksi hapus timbangan via `DELETE /api/v1/profile/weight/:id` (memenuhi Backend Verification V4). | Principal Architect Agent |
