@@ -6,6 +6,7 @@ import { AuthGate } from "@/components/auth/auth-gate";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { DesktopSidebar } from "@/components/layout/desktop-sidebar";
 import { MobileTopHeader } from "@/components/layout/mobile-top-header";
+import { InstallBanner } from "@/components/pwa/install-banner";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -50,6 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </main>
 
+        <InstallBanner />
         <BottomNav />
       </div>
     </AuthGate>

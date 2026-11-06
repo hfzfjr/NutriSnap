@@ -50,6 +50,10 @@ export function setStoredAuthToken(token: string | null): void {
   }
 }
 
+export function clearStoredAuthToken(): void {
+  setStoredAuthToken(null);
+}
+
 export interface ApiEnvelope<T> {
   success: boolean;
   data?: T;
