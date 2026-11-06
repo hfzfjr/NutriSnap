@@ -1,6 +1,6 @@
 # Agile Progress Tracker (PROGRESS_TRACKER.md) — NutriSnap
 
-> **Current Active Sprint:** Seluruh Sprint Selesai (Sprint 0 – Sprint 5 Completed)  
+> **Current Active Sprint:** Sprint 6 — UI/UX & Data Integrity Refactor (`TODO`, lihat `docs/REFACTOR.md`). Sprint 0 – Sprint 5 Completed.  
 > **Overall Project Completion:** `98 / 98 Story Points (100.0%)`  
 > **Last Updated:** 2026-11-06
 
@@ -60,6 +60,22 @@
 
 ---
 
+### Sprint 6: UI/UX, Konten & Data Integrity Refactor (rujukan: `docs/REFACTOR.md`)
+> Catatan: Sprint 6 adalah perbaikan atas Sprint 0–5, bukan fitur baru; tabel velocity di atas belum memasukkannya.
+- [x] **`NS-601`** — Fase 0: Hapus auto-login/akun demo, `AuthGate`, `apiFetch` jujur, hapus semua nilai fallback palsu, perbaikan tanggal/zona waktu, viewport zoom, ikon PNG + manifest — **DONE**
+- [/] **`NS-602`** — Fase 1: Token warna "Dapur Segar", tipografi (2 font), primitif UI baru, sapu bersih warna hardcoded, skrip `check:contrast` — **IN_PROGRESS**
+- [ ] **`NS-603`** — Fase 2: App shell, navigasi berbahasa Indonesia, safe-area, status API key nyata, `loading/error/not-found`, `PwaManager` global + Install Banner — **TODO**
+- [ ] **`NS-604`** — Fase 3: Landing page ditulis ulang (copy final, mockup nyata, kalkulator tervalidasi, `/privacy`, `/terms`) — **TODO**
+- [ ] **`NS-605`** — Fase 4: Login & Onboarding (form kosong, mode edit, validasi, guardrail bisa ditindaklanjuti, 5 tingkat aktivitas) — **TODO**
+- [ ] **`NS-606`** — Fase 5: Beranda & `CalorieRing` (status berikon, timeline waktu makan, empty/loading/error state, hapus + urungkan) — **TODO**
+- [ ] **`NS-607`** — Fase 6: Halaman Catat (galeri + kamera, edit hasil scan, skala per-gram, banner API key, form kosong) — **TODO**
+- [ ] **`NS-608`** — Fase 7: Coach AI (Markdown, pesan optimistis, quick prompt dinamis, layout penuh layar) — **TODO**
+- [ ] **`NS-609`** — Fase 8: Progres (grafik berat, 7 hari lengkap, tanpa fallback palsu) — **TODO**
+- [ ] **`NS-610`** — Fase 9: Pengaturan & PWA (Switch pengingat, zona waktu, tanpa langganan palsu, kartu API key baru) — **TODO**
+- [ ] **`NS-611`** — Fase 10: QA, linter sungguhan, sinkronisasi dokumen, verifikasi backend V1–V7 — **TODO**
+
+---
+
 ## 3. Changelog & Activity Log
 
 | Tanggal | Task ID | Ringkasan Aktivitas | Oleh |
@@ -71,3 +87,4 @@
 | `2026-11-06` | `NS-301`, `NS-302`, `NS-303` | Menyelesaikan seluruh **Sprint 3** pada branch `feat/sprint-3` dan merge ke `main`: Komponen SVG `CalorieRing`, halaman `/dashboard` interaktif (Date Navigator, Calorie Ring, Macro Progress Bars, Meal Timeline), serta halaman `/analytics` (7-day Calorie Adherence Chart, Weight Log History, dan BMI Category Tracker). | Principal Architect Agent |
 | `2026-11-06` | `NS-401`, `NS-402`, `NS-403` | Menyelesaikan seluruh **Sprint 4** pada branch `feat/sprint-4` dan merge ke `main`: Backend Contextual AI Bulking & Diet Coach (`chat.routes.ts`) dengan injeksi real-time profil BMR/TDEE dan sisa kalori/protein harian ke `systemInstruction`, halaman `/chat` dengan Quick Prompt Chips, serta graceful fallback saat BYOK API Key belum diatur. | Principal Architect Agent |
 | `2026-11-06` | `NS-501` – `NS-504` | Menyelesaikan seluruh **Sprint 5** pada branch `feat/sprint-5` dan merge ke `main`: Service Worker PWA (`public/sw.js`) & ikon (`public/icons/icon.svg`), Web Push VAPID (`/api/v1/notifications/*`) + Cron Scheduler pengingat makan harian (`meal-reminder.job.ts`), halaman `/settings` lengkap, serta verifikasi akhir End-to-End (`pnpm test`, `pnpm typecheck`, `pnpm build` 100% sukses). | Principal Architect Agent |
+| `2026-11-06` | `NS-601` | Merampungkan **Fase 0 (Data Integrity & Auth Architecture)** pada branch `feat/sprint-6`: Penghapusan seluruh auto-login demo dan data fallback fiktif (`2415/2800 kcal`, `raka@nutrisnap.app`), pembuatan `AuthGate` dan `AppShell` protektif, perbaikan penanggalan berbasis zona waktu (`lib/date.ts`, `lib/format.ts`), utilitas `apiFetch` jujur, pembuatan logomark plate + focus brackets, generasi ikon PWA PNG (192, 512, maskable 512, apple-touch), update `manifest.ts`, serta pembuatan error boundaries (`not-found.tsx`, `error.tsx`, `loading.tsx`). | Principal Architect Agent |

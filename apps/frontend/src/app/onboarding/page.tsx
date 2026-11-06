@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { apiFetch, getStoredAuthToken, setStoredAuthToken } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -37,18 +37,18 @@ export default function OnboardingPage() {
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
 
   // Form states
-  const [name, setName] = React.useState("Raka Pratama");
+  const [name, setName] = React.useState("");
   const [gender, setGender] = React.useState<Gender>("male");
   const [age, setAge] = React.useState(22);
-  const [heightCm, setHeightCm] = React.useState(172);
-  const [currentWeightKg, setCurrentWeightKg] = React.useState(58.5);
+  const [heightCm, setHeightCm] = React.useState(170);
+  const [currentWeightKg, setCurrentWeightKg] = React.useState(60);
   const [activityLevel, setActivityLevel] =
     React.useState<ActivityLevel>("moderate");
-  const [targetWeightKg, setTargetWeightKg] = React.useState(66.0);
+  const [targetWeightKg, setTargetWeightKg] = React.useState(65);
   const [timelineUnit, setTimelineUnit] = React.useState<"months" | "years">(
     "months"
   );
-  const [timelineValue, setTimelineValue] = React.useState(5);
+  const [timelineValue, setTimelineValue] = React.useState(4);
 
   const targetTimelineMonths =
     timelineUnit === "years"
@@ -77,21 +77,43 @@ export default function OnboardingPage() {
     ]
   );
 
-  // Pastikan sesi aktif (atau buat sesi demo otomatis jika belum login)
+  // Ambil profil saat ini jika ada (mode edit atau nama pengguna Google)
   React.useEffect(() => {
-    const token = getStoredAuthToken();
-    if (!token) {
-      void apiFetch<{ token: string }>("/auth/google/token", {
-        method: "POST",
-        body: JSON.stringify({
-          googleId: "google-onboarding-user",
-          email: "raka@nutrisnap.app",
-          name: "Raka Pratama",
-        }),
+    let isMounted = true;
+    apiFetch<{
+      user: { id: string; name: string | null; email: string };
+      onboardingCompleted: boolean;
+      profile: {
+        gender: Gender;
+        age: number;
+        heightCm: number;
+        currentWeightKg: number;
+        targetWeightKg: number;
+        targetTimelineMonths: number;
+        activityLevel: ActivityLevel;
+      } | null;
+    }>("/auth/me")
+      .then((res) => {
+        if (!isMounted) return;
+        if (res.user?.name && !name) {
+          setName(res.user.name);
+        }
+        if (res.profile) {
+          setGender(res.profile.gender);
+          setAge(res.profile.age);
+          setHeightCm(res.profile.heightCm);
+          setCurrentWeightKg(res.profile.currentWeightKg);
+          setTargetWeightKg(res.profile.targetWeightKg);
+          setTimelineUnit("months");
+          setTimelineValue(res.profile.targetTimelineMonths);
+          setActivityLevel(res.profile.activityLevel);
+        }
       })
-        .then((res) => setStoredAuthToken(res.token))
-        .catch(() => {});
-    }
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleSaveOnboarding = async () => {

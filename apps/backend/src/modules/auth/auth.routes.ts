@@ -135,6 +135,16 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
   // 3. Direct Google Payload / Demo Login Endpoint
   app.post("/api/v1/auth/google/token", async (request, reply) => {
+    if (env.NODE_ENV === "production" && process.env.ENABLE_DEMO_LOGIN !== "true") {
+      return reply.status(403).send({
+        success: false,
+        error: {
+          code: "FORBIDDEN",
+          message: "Login token langsung dinonaktifkan di lingkungan produksi.",
+        },
+      });
+    }
+
     const payload = googleTokenSignInSchema.parse(request.body);
     const user = await repository.upsertGoogleUser({
       googleId: payload.googleId,

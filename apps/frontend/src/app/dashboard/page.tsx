@@ -5,7 +5,6 @@ import {
   BotMessageSquare,
   Calendar,
   Camera,
-  Flame,
   Plus,
   Sparkles,
   Trash2,
@@ -25,7 +24,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { apiFetch, getStoredAuthToken, setStoredAuthToken } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
+import { shiftISO, todayISO } from "@/lib/date";
 
 interface MealLogItem {
   id: string;
@@ -80,37 +80,20 @@ const MEAL_SECTIONS = [
 ] as const;
 
 export default function DashboardPage() {
-  const [selectedDate, setSelectedDate] = React.useState(() =>
-    new Date().toISOString().slice(0, 10)
-  );
-  const [summary, setSummary] = React.useState<DailySummaryResponse | null>(
-    null
-  );
+  const [selectedDate, setSelectedDate] = React.useState<string>(() => todayISO());
+  const [summary, setSummary] = React.useState<DailySummaryResponse | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
   const fetchDailySummary = React.useCallback(async (dateStr: string) => {
     setIsLoading(true);
     try {
-      let token = getStoredAuthToken();
-      if (!token) {
-        const authRes = await apiFetch<{ token: string }>("/auth/google/token", {
-          method: "POST",
-          body: JSON.stringify({
-            googleId: "google-dashboard-user",
-            email: "raka@nutrisnap.app",
-            name: "Raka Pratama",
-          }),
-        });
-        token = authRes.token;
-        setStoredAuthToken(token);
-      }
-
       const data = await apiFetch<DailySummaryResponse>(
         `/meals/daily?date=${encodeURIComponent(dateStr)}`
       );
       setSummary(data);
     } catch {
-      // Fallback jika backend belum dihubungkan
+      // Galat ditangani atau user belum menyelesaikan onboarding
+      setSummary(null);
     } finally {
       setIsLoading(false);
     }
@@ -135,15 +118,7 @@ export default function DashboardPage() {
     carbsG: 0,
     fatG: 0,
   };
-  const targets = summary?.targets ?? {
-    goalType: "bulking" as const,
-    maintenanceCalories: 2415,
-    targetDailyCalories: 2800,
-    targetDailyProteinG: 120,
-    targetDailyCarbsG: 360,
-    targetDailyFatG: 78,
-    dailyCalorieDelta: 385,
-  };
+  const targets = summary?.targets ?? null;
 
   return (
     <div className="space-y-6">
@@ -154,25 +129,27 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold tracking-tight">
               Dashboard Harian
             </h1>
-            <Badge
-              variant={
-                targets.goalType === "bulking"
-                  ? "surplus"
-                  : targets.goalType === "cutting"
-                  ? "deficit"
-                  : "maintenance"
-              }
-            >
-              {targets.goalType.toUpperCase()} (
-              {targets.dailyCalorieDelta >= 0
-                ? `+${targets.dailyCalorieDelta}`
-                : targets.dailyCalorieDelta}{" "}
-              kcal)
-            </Badge>
+            {targets ? (
+              <Badge
+                variant={
+                  targets.goalType === "bulking"
+                    ? "surplus"
+                    : targets.goalType === "cutting"
+                    ? "deficit"
+                    : "maintenance"
+                }
+              >
+                {targets.goalType.toUpperCase()} (
+                {targets.dailyCalorieDelta >= 0
+                  ? `+${targets.dailyCalorieDelta}`
+                  : targets.dailyCalorieDelta}{" "}
+                kcal)
+              </Badge>
+            ) : null}
           </div>
           <p className="text-xs text-muted-foreground">
             {summary?.status.label ??
-              "Pantau kalori, protein, dan status surplus/defisit Anda hari ini."}
+              "Pantau kalori, protein, dan status surplus/defisit kamu hari ini."}
           </p>
         </div>
 
@@ -183,27 +160,17 @@ export default function DashboardPage() {
               variant="ghost"
               size="sm"
               className="h-8 px-2 text-xs"
-              onClick={() => {
-                const d = new Date(selectedDate);
-                d.setDate(d.getDate() - 1);
-                setSelectedDate(d.toISOString().slice(0, 10));
-              }}
+              onClick={() => setSelectedDate(shiftISO(selectedDate, -1))}
               title="Hari Sebelumnya"
             >
               &larr;
             </Button>
             <Button
               type="button"
-              variant={
-                selectedDate === new Date().toISOString().slice(0, 10)
-                  ? "secondary"
-                  : "ghost"
-              }
+              variant={selectedDate === todayISO() ? "secondary" : "ghost"}
               size="sm"
               className="h-8 px-2.5 text-xs font-semibold"
-              onClick={() =>
-                setSelectedDate(new Date().toISOString().slice(0, 10))
-              }
+              onClick={() => setSelectedDate(todayISO())}
             >
               Hari Ini
             </Button>
@@ -212,11 +179,7 @@ export default function DashboardPage() {
               variant="ghost"
               size="sm"
               className="h-8 px-2 text-xs"
-              onClick={() => {
-                const d = new Date(selectedDate);
-                d.setDate(d.getDate() + 1);
-                setSelectedDate(d.toISOString().slice(0, 10));
-              }}
+              onClick={() => setSelectedDate(shiftISO(selectedDate, 1))}
               title="Hari Berikutnya"
             >
               &rarr;
@@ -245,114 +208,127 @@ export default function DashboardPage() {
       {/* Hero Calorie Ring & Macro Progress Grid */}
       <Card>
         <CardContent className="p-5 md:p-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-12 items-center">
-            <div className="md:col-span-5 flex justify-center">
-              <CalorieRing
-                consumedCalories={totals.calories}
-                targetCalories={targets.targetDailyCalories}
-                maintenanceCalories={targets.maintenanceCalories}
-                goalType={targets.goalType}
-              />
+          {isLoading ? (
+            <div className="flex h-52 items-center justify-center text-xs text-muted-foreground animate-pulse">
+              Memuat target dan ringkasan nutrisi...
             </div>
-
-            <div className="md:col-span-7 space-y-4">
-              <div className="grid grid-cols-3 gap-2.5 rounded-2xl bg-secondary/50 p-3.5 text-center">
-                <div>
-                  <span className="text-[11px] text-muted-foreground block">
-                    Maintenance (TDEE)
-                  </span>
-                  <span className="text-base font-bold tabular-nums">
-                    {targets.maintenanceCalories} kcal
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-muted-foreground block">
-                    Target {targets.goalType}
-                  </span>
-                  <span className="text-base font-bold tabular-nums text-primary">
-                    {targets.targetDailyCalories} kcal
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-muted-foreground block">
-                    Selisih vs TDEE
-                  </span>
-                  <span className="text-base font-bold tabular-nums">
-                    {totals.calories - targets.maintenanceCalories >= 0
-                      ? `+${totals.calories - targets.maintenanceCalories}`
-                      : totals.calories - targets.maintenanceCalories}{" "}
-                    kcal
-                  </span>
-                </div>
-              </div>
-
-              {/* Protein Progress */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-indigo-500">
-                    Protein (Target Otot Utama)
-                  </span>
-                  <span className="font-semibold tabular-nums">
-                    {totals.proteinG}g / {targets.targetDailyProteinG}g
-                  </span>
-                </div>
-                <Progress
-                  value={Math.min(
-                    100,
-                    Math.round(
-                      (totals.proteinG /
-                        Math.max(1, targets.targetDailyProteinG)) *
-                        100
-                    )
-                  )}
-                  indicatorClassName="bg-indigo-500"
+          ) : !targets ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <p className="text-sm font-medium">Profil nutrisi kamu belum selesai diatur.</p>
+              <Link href="/onboarding" className="mt-3">
+                <Button size="sm">Atur Profil Sekarang</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-12 items-center">
+              <div className="md:col-span-5 flex justify-center">
+                <CalorieRing
+                  consumedCalories={totals.calories}
+                  targetCalories={targets.targetDailyCalories}
+                  maintenanceCalories={targets.maintenanceCalories}
+                  goalType={targets.goalType}
                 />
               </div>
 
-              {/* Carbs Progress */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-amber-500">
-                    Karbohidrat (Sumber Energi)
-                  </span>
-                  <span className="font-semibold tabular-nums">
-                    {totals.carbsG}g / {targets.targetDailyCarbsG}g
-                  </span>
+              <div className="md:col-span-7 space-y-4">
+                <div className="grid grid-cols-3 gap-2.5 rounded-2xl bg-secondary/50 p-3.5 text-center">
+                  <div>
+                    <span className="text-[11px] text-muted-foreground block">
+                      Maintenance (TDEE)
+                    </span>
+                    <span className="text-base font-bold tabular-nums">
+                      {targets.maintenanceCalories} kcal
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-muted-foreground block">
+                      Target {targets.goalType}
+                    </span>
+                    <span className="text-base font-bold tabular-nums text-primary">
+                      {targets.targetDailyCalories} kcal
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-muted-foreground block">
+                      Selisih vs TDEE
+                    </span>
+                    <span className="text-base font-bold tabular-nums">
+                      {totals.calories - targets.maintenanceCalories >= 0
+                        ? `+${totals.calories - targets.maintenanceCalories}`
+                        : totals.calories - targets.maintenanceCalories}{" "}
+                      kcal
+                    </span>
+                  </div>
                 </div>
-                <Progress
-                  value={Math.min(
-                    100,
-                    Math.round(
-                      (totals.carbsG / Math.max(1, targets.targetDailyCarbsG)) *
-                        100
-                    )
-                  )}
-                  indicatorClassName="bg-amber-500"
-                />
-              </div>
 
-              {/* Fat Progress */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-rose-500">
-                    Lemak Esensial
-                  </span>
-                  <span className="font-semibold tabular-nums">
-                    {totals.fatG}g / {targets.targetDailyFatG}g
-                  </span>
+                {/* Protein Progress */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-semibold text-indigo-500">
+                      Protein (Target Otot Utama)
+                    </span>
+                    <span className="font-semibold tabular-nums">
+                      {totals.proteinG}g / {targets.targetDailyProteinG}g
+                    </span>
+                  </div>
+                  <Progress
+                    value={Math.min(
+                      100,
+                      Math.round(
+                        (totals.proteinG /
+                          Math.max(1, targets.targetDailyProteinG)) *
+                          100
+                      )
+                    )}
+                    indicatorClassName="bg-indigo-500"
+                  />
                 </div>
-                <Progress
-                  value={Math.min(
-                    100,
-                    Math.round(
-                      (totals.fatG / Math.max(1, targets.targetDailyFatG)) * 100
-                    )
-                  )}
-                  indicatorClassName="bg-rose-500"
-                />
+
+                {/* Carbs Progress */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-semibold text-amber-500">
+                      Karbohidrat (Sumber Energi)
+                    </span>
+                    <span className="font-semibold tabular-nums">
+                      {totals.carbsG}g / {targets.targetDailyCarbsG}g
+                    </span>
+                  </div>
+                  <Progress
+                    value={Math.min(
+                      100,
+                      Math.round(
+                        (totals.carbsG / Math.max(1, targets.targetDailyCarbsG)) *
+                          100
+                      )
+                    )}
+                    indicatorClassName="bg-amber-500"
+                  />
+                </div>
+
+                {/* Fat Progress */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-semibold text-rose-500">
+                      Lemak Esensial
+                    </span>
+                    <span className="font-semibold tabular-nums">
+                      {totals.fatG}g / {targets.targetDailyFatG}g
+                    </span>
+                  </div>
+                  <Progress
+                    value={Math.min(
+                      100,
+                      Math.round(
+                        (totals.fatG / Math.max(1, targets.targetDailyFatG)) * 100
+                      )
+                    )}
+                    indicatorClassName="bg-rose-500"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 

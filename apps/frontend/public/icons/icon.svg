@@ -1,6 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="112" fill="#090D16"/>
-  <circle cx="256" cy="256" r="176" fill="none" stroke="#10B981" stroke-width="32" stroke-linecap="round" stroke-dasharray="900 1200"/>
-  <path d="M266 140C266 140 328 192 328 264C328 308.183 295.764 344 256 344C216.236 344 184 308.183 184 264C184 232 204 202 222 186C222 212 242 224 242 224C236 188 266 140 266 140Z" fill="#10B981"/>
+  <rect width="512" height="512" rx="128" fill="#1D4A38"/>
+  <g transform="translate(64, 64) scale(16)" stroke="#FAF8F5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Piring / Lingkaran Luar -->
+    <circle cx="12" cy="12" r="9" stroke-width="1.8"/>
+    <!-- Lingkaran Piring Dalam -->
+    <circle cx="12" cy="12" r="4.5" stroke-width="1.2" stroke-dasharray="1.5 1.5"/>
+    <!-- Sudut Bidik Kamera (Focus / Viewfinder corners) -->
+    <path d="M7 3h-2.5a2.5 2.5 0 0 0-2.5 2.5v2.5" stroke-width="1.6"/>
+    <path d="M17 3h2.5a2.5 2.5 0 0 1 2.5 2.5v2.5" stroke-width="1.6"/>
+    <path d="M7 21h-2.5a2.5 2.5 0 0 1-2.5-2.5v-2.5" stroke-width="1.6"/>
+    <path d="M17 21h2.5a2.5 2.5 0 0 0 2.5-2.5v-2.5" stroke-width="1.6"/>
+  </g>
 </svg>
-

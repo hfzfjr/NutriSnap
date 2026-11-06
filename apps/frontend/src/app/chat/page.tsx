@@ -20,7 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { apiFetch, getStoredAuthToken, setStoredAuthToken } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
 
 interface ChatMessageItem {
   id: string;
@@ -57,6 +57,7 @@ export default function AiDietCoachChatPage() {
   >(null);
   const [inputText, setInputText] = React.useState("");
   const [isSending, setIsSending] = React.useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = React.useState(true);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -64,26 +65,15 @@ export default function AiDietCoachChatPage() {
   }, [messages, isSending]);
 
   const loadHistory = React.useCallback(async () => {
+    setIsLoadingHistory(true);
     try {
-      let token = getStoredAuthToken();
-      if (!token) {
-        const authRes = await apiFetch<{ token: string }>("/auth/google/token", {
-          method: "POST",
-          body: JSON.stringify({
-            googleId: "google-chat-user",
-            email: "raka@nutrisnap.app",
-            name: "Raka Pratama",
-          }),
-        });
-        token = authRes.token;
-        setStoredAuthToken(token);
-      }
-
       const data = await apiFetch<ChatHistoryResponse>("/chat/history");
       setMessages(data.messages);
       setContext(data.context);
     } catch {
       // Abaikan jika gagal
+    } finally {
+      setIsLoadingHistory(false);
     }
   }, []);
 
@@ -155,19 +145,31 @@ export default function AiDietCoachChatPage() {
       {/* Context Header Bar */}
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-card p-3.5">
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <Badge variant="surplus" className="uppercase">
-            Mode: {context?.goalType ?? "bulking"}
-          </Badge>
-          <span className="text-muted-foreground tabular-nums">
-            Sisa Hari Ini:{" "}
-            <strong className="text-emerald-500">
-              {Math.max(0, context?.remainingCalories ?? 680)} kcal
-            </strong>{" "}
-            •{" "}
-            <strong className="text-indigo-500">
-              {context?.remainingProteinG ?? 35}g Protein
-            </strong>
-          </span>
+          {context ? (
+            <>
+              <Badge variant="surplus" className="uppercase">
+                Mode: {context.goalType}
+              </Badge>
+              <span className="text-muted-foreground tabular-nums">
+                Sisa Hari Ini:{" "}
+                <strong className="text-emerald-500">
+                  {Math.max(0, context.remainingCalories)} kcal
+                </strong>{" "}
+                •{" "}
+                <strong className="text-indigo-500">
+                  {context.remainingProteinG}g Protein
+                </strong>
+              </span>
+            </>
+          ) : isLoadingHistory ? (
+            <span className="text-xs text-muted-foreground animate-pulse">
+              Memuat konteks nutrisi harian...
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              Profil nutrisi belum dikonfigurasi
+            </span>
+          )}
         </div>
 
         {context?.hasApiKey ? (

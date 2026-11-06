@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { apiFetch, getStoredAuthToken, setStoredAuthToken } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
+import { todayISO } from "@/lib/date";
 
 interface WeightLogEntry {
   id: string;
@@ -50,29 +51,15 @@ interface AnalyticsOverviewResponse {
 }
 
 export default function AnalyticsPage() {
-  const [data, setData] = React.useState<AnalyticsOverviewResponse | null>(
-    null
-  );
-  const [newWeightKg, setNewWeightKg] = React.useState<number>(59.0);
+  const [data, setData] = React.useState<AnalyticsOverviewResponse | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [newWeightKg, setNewWeightKg] = React.useState<number | "">("");
   const [weightNotes, setWeightNotes] = React.useState("");
   const [isSaving, setIsSaving] = React.useState(false);
 
   const loadAnalytics = React.useCallback(async () => {
+    setIsLoading(true);
     try {
-      let token = getStoredAuthToken();
-      if (!token) {
-        const authRes = await apiFetch<{ token: string }>("/auth/google/token", {
-          method: "POST",
-          body: JSON.stringify({
-            googleId: "google-analytics-user",
-            email: "raka@nutrisnap.app",
-            name: "Raka Pratama",
-          }),
-        });
-        token = authRes.token;
-        setStoredAuthToken(token);
-      }
-
       const res = await apiFetch<AnalyticsOverviewResponse>(
         "/analytics/overview"
       );
@@ -82,6 +69,8 @@ export default function AnalyticsPage() {
       }
     } catch {
       // Abaikan jika gagal
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -91,16 +80,16 @@ export default function AnalyticsPage() {
 
   const handleLogWeight = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newWeightKg <= 0) return;
+    if (!newWeightKg || Number(newWeightKg) <= 0) return;
 
     setIsSaving(true);
     try {
-      const todayStr = new Date().toISOString().slice(0, 10);
+      const todayStr = todayISO();
       await apiFetch("/profile/weight", {
         method: "POST",
         body: JSON.stringify({
           recordedDate: todayStr,
-          weightKg: newWeightKg,
+          weightKg: Number(newWeightKg),
           notes: weightNotes.trim() || undefined,
         }),
       });
@@ -113,11 +102,13 @@ export default function AnalyticsPage() {
     }
   };
 
-  const currentWeight = data?.profile?.currentWeightKg ?? 58.5;
-  const targetWeight = data?.profile?.targetWeightKg ?? 66.0;
-  const bmiScore = data?.profile?.bmiScore ?? 19.77;
-  const bmiCategory = data?.profile?.bmiCategory ?? "normal";
-  const targetCalories = data?.profile?.targetDailyCalories ?? 2800;
+  const profile = data?.profile;
+  const currentWeight = profile?.currentWeightKg ?? null;
+  const targetWeight = profile?.targetWeightKg ?? null;
+  const bmiScore = profile?.bmiScore ?? null;
+  const bmiCategory = profile?.bmiCategory ?? "normal";
+  const targetCalories = profile?.targetDailyCalories ?? null;
+  const maintenanceCalories = profile?.maintenanceCalories ?? null;
 
   return (
     <div className="space-y-6">
@@ -139,14 +130,21 @@ export default function AnalyticsPage() {
               Berat Badan Saat Ini
             </CardDescription>
             <CardTitle className="text-3xl font-extrabold tabular-nums">
-              {currentWeight} <span className="text-sm font-normal">kg</span>
+              {currentWeight !== null ? currentWeight : "-"}{" "}
+              <span className="text-sm font-normal">kg</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground">
-            Target: <strong className="text-foreground">{targetWeight} kg</strong> (Selisih{" "}
-            {(targetWeight - currentWeight >= 0 ? "+" : "") +
-              (targetWeight - currentWeight).toFixed(1)}{" "}
-            kg)
+            {targetWeight !== null && currentWeight !== null ? (
+              <>
+                Target: <strong className="text-foreground">{targetWeight} kg</strong> (Selisih{" "}
+                {(targetWeight - currentWeight >= 0 ? "+" : "") +
+                  (targetWeight - currentWeight).toFixed(1)}{" "}
+                kg)
+              </>
+            ) : (
+              "Target belum diatur"
+            )}
           </CardContent>
         </Card>
 
@@ -157,7 +155,7 @@ export default function AnalyticsPage() {
               Body Mass Index (BMI)
             </CardDescription>
             <CardTitle className="text-3xl font-extrabold tabular-nums">
-              {bmiScore}
+              {bmiScore !== null ? bmiScore : "-"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -174,14 +172,14 @@ export default function AnalyticsPage() {
               Target Kalori Harian
             </CardDescription>
             <CardTitle className="text-3xl font-extrabold tabular-nums text-emerald-500">
-              {targetCalories.toLocaleString("id-ID")}{" "}
+              {targetCalories !== null ? targetCalories.toLocaleString("id-ID") : "-"}{" "}
               <span className="text-sm font-normal text-muted-foreground">
                 kcal
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground">
-            Maintenance TDEE: {data?.profile?.maintenanceCalories ?? 2415} kcal/hari
+            Maintenance TDEE: {maintenanceCalories !== null ? `${maintenanceCalories} kcal/hari` : "-"}
           </CardContent>
         </Card>
       </div>
@@ -195,20 +193,20 @@ export default function AnalyticsPage() {
               Kepatuhan Kalori & Protein 7 Hari Terakhir
             </CardTitle>
             <CardDescription>
-              Perbandingan asupan kalori harian terhadap target ({targetCalories} kcal)
+              Perbandingan asupan kalori harian terhadap target ({targetCalories !== null ? `${targetCalories} kcal` : "Belum diatur"})
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {(data?.weeklySummary ?? []).length === 0 ? (
               <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground space-y-1">
                 <p className="font-semibold text-foreground">Belum ada riwayat makan 7 hari terakhir.</p>
-                <p>Catat makanan harian Anda di menu Scan / Log untuk melihat grafik kepatuhan kalori & protein.</p>
+                <p>Catat makanan harian kamu di menu Scan / Log untuk melihat grafik kepatuhan kalori & protein.</p>
               </div>
             ) : (
               (data?.weeklySummary ?? []).map((day) => {
                 const pct = Math.min(
                   100,
-                  Math.round((day.calories / Math.max(1, targetCalories)) * 100)
+                  Math.round((day.calories / Math.max(1, targetCalories ?? 2000)) * 100)
                 );
                 return (
                   <div key={day.date} className="space-y-1">
@@ -216,7 +214,7 @@ export default function AnalyticsPage() {
                       <span className="font-medium tabular-nums">{day.date}</span>
                       <span className="text-muted-foreground tabular-nums">
                         <strong className="text-foreground">{day.calories}</strong>{" "}
-                        / {targetCalories} kcal •{" "}
+                        / {targetCalories !== null ? `${targetCalories} kcal` : "-"} •{" "}
                         <strong className="text-indigo-500">
                           {day.proteinG}g P
                         </strong>

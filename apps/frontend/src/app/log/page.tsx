@@ -23,7 +23,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { apiFetch, getStoredAuthToken, setStoredAuthToken } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
+import { todayISO } from "@/lib/date";
 import { compressFoodImageClient } from "@/lib/image-compress";
 
 const QUICK_INDONESIAN_FOODS = [
@@ -60,11 +61,11 @@ export default function DualMealLoggerPage() {
 
   // Manual Form states
   const [manualFoodName, setManualFoodName] = React.useState("");
-  const [manualWeightGrams, setManualWeightGrams] = React.useState<number>(150);
-  const [manualCalories, setManualCalories] = React.useState<number>(248);
-  const [manualProteinG, setManualProteinG] = React.useState<number>(46.5);
+  const [manualWeightGrams, setManualWeightGrams] = React.useState<number>(100);
+  const [manualCalories, setManualCalories] = React.useState<number>(0);
+  const [manualProteinG, setManualProteinG] = React.useState<number>(0);
   const [manualCarbsG, setManualCarbsG] = React.useState<number>(0);
-  const [manualFatG, setManualFatG] = React.useState<number>(5.4);
+  const [manualFatG, setManualFatG] = React.useState<number>(0);
   const [isEstimating, setIsEstimating] = React.useState(false);
 
   // Commit state
@@ -86,20 +87,6 @@ export default function DualMealLoggerPage() {
       ) {
         setMealType(paramMealType);
       }
-    }
-
-    const token = getStoredAuthToken();
-    if (!token) {
-      void apiFetch<{ token: string }>("/auth/google/token", {
-        method: "POST",
-        body: JSON.stringify({
-          googleId: "google-logger-user",
-          email: "raka@nutrisnap.app",
-          name: "Raka Pratama",
-        }),
-      })
-        .then((res) => setStoredAuthToken(res.token))
-        .catch(() => {});
     }
   }, []);
 
@@ -178,7 +165,7 @@ export default function DualMealLoggerPage() {
     setIsSaving(true);
     setFeedback(null);
     try {
-      const todayStr = new Date().toISOString().slice(0, 10);
+      const todayStr = todayISO();
       await apiFetch("/meals", {
         method: "POST",
         body: JSON.stringify({
@@ -253,7 +240,7 @@ export default function DualMealLoggerPage() {
     setIsSaving(true);
     setFeedback(null);
     try {
-      const todayStr = new Date().toISOString().slice(0, 10);
+      const todayStr = todayISO();
       await apiFetch("/meals", {
         method: "POST",
         body: JSON.stringify({

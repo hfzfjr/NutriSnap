@@ -1,34 +1,48 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout/app-shell";
 import { ThemeProvider } from "@/components/theme-provider";
 
-const plusJakarta = Plus_Jakarta_Sans({
+const sans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
 });
 
+const display = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+  axes: ["opsz"],
+});
+
 export const metadata: Metadata = {
-  title: "NutriSnap — AI Nutrition, Bulking & Diet Tracker PWA",
+  title: {
+    default: "NutriSnap — Catat kalori & protein dari foto",
+    template: "%s · NutriSnap",
+  },
   description:
-    "AI-powered food photo logging, BMI/TDEE calculator, and bulking/diet coach powered by Google Gemini BYOK.",
+    "Pencatat kalori & protein untuk bulking dan diet dengan kamera AI Google Gemini dan keamanan BYOK mandiri.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "NutriSnap",
   },
+  icons: {
+    icon: "/icons/icon.svg",
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F8FAFC" },
-    { media: "(prefers-color-scheme: dark)", color: "#090D16" },
+    { media: "(prefers-color-scheme: light)", color: "#FAF8F5" },
+    { media: "(prefers-color-scheme: dark)", color: "#111814" },
   ],
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -38,10 +52,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
-      <body className={`${plusJakarta.variable} font-sans min-h-screen`}>
+      <body
+        className={`${sans.variable} ${display.variable} font-sans min-h-dvh antialiased`}
+      >
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
@@ -51,4 +67,3 @@ export default function RootLayout({
     </html>
   );
 }
-
