@@ -243,7 +243,7 @@ export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
             <label className="text-xs font-medium text-foreground">
               Model Gemini Pilihan
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant={
@@ -251,9 +251,9 @@ export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
                 }
                 size="sm"
                 onClick={() => setPreferredModel("gemini-3.8-flash")}
-                className="text-xs justify-center text-center py-2 h-auto"
+                className="h-10 text-xs font-mono justify-center truncate"
               >
-                gemini-3.8-flash (Cepat & Hemat — Rekomendasi)
+                gemini-3.8-flash
               </Button>
               <Button
                 type="button"
@@ -262,9 +262,9 @@ export function ByokKeyCard({ onSuccess }: ByokKeyCardProps) {
                 }
                 size="sm"
                 onClick={() => setPreferredModel("gemini-3.8-pro")}
-                className="text-xs justify-center text-center py-2 h-auto"
+                className="h-10 text-xs font-mono justify-center truncate"
               >
-                gemini-3.8-pro (Presisi Tinggi)
+                gemini-3.8-pro
               </Button>
             </div>
           </div>

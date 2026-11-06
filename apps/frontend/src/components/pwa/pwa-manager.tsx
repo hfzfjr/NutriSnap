@@ -69,6 +69,10 @@ export function PwaPushReminderCard() {
       } catch {
         // default Asia/Jakarta
       }
+      // Registrasi Service Worker segera
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js").catch(() => {});
+      }
     }
 
     // Ambil preferensi notifikasi dari backend
@@ -144,6 +148,9 @@ export function PwaPushReminderCard() {
         return;
       }
 
+      if ("serviceWorker" in navigator) {
+        await navigator.serviceWorker.register("/sw.js").catch(() => {});
+      }
       const reg = await navigator.serviceWorker.ready;
       const vapidRes = await apiFetch<{ publicKey: string }>(
         "/notifications/vapid-public-key"
@@ -295,38 +302,55 @@ export function PwaPushReminderCard() {
             <strong className="text-foreground">{timezone}</strong>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="space-y-1">
-              <label htmlFor="time-breakfast" className="text-xs font-medium text-foreground">
-                Jam Sarapan
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/20 px-3.5 py-2">
+              <label
+                htmlFor="time-breakfast"
+                className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer"
+              >
+                <span className="text-sm">🍳</span>
+                <span>Jam Sarapan</span>
               </label>
               <Input
                 id="time-breakfast"
                 type="time"
                 value={breakfastTime}
                 onChange={(e) => setBreakfastTime(e.target.value)}
+                className="h-9 w-28 text-center text-sm font-semibold tabular-nums rounded-lg bg-background"
               />
             </div>
-            <div className="space-y-1">
-              <label htmlFor="time-lunch" className="text-xs font-medium text-foreground">
-                Jam Makan Siang
+
+            <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/20 px-3.5 py-2">
+              <label
+                htmlFor="time-lunch"
+                className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer"
+              >
+                <span className="text-sm">🍲</span>
+                <span>Jam Makan Siang</span>
               </label>
               <Input
                 id="time-lunch"
                 type="time"
                 value={lunchTime}
                 onChange={(e) => setLunchTime(e.target.value)}
+                className="h-9 w-28 text-center text-sm font-semibold tabular-nums rounded-lg bg-background"
               />
             </div>
-            <div className="space-y-1">
-              <label htmlFor="time-dinner" className="text-xs font-medium text-foreground">
-                Jam Makan Malam
+
+            <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/20 px-3.5 py-2">
+              <label
+                htmlFor="time-dinner"
+                className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer"
+              >
+                <span className="text-sm">🌙</span>
+                <span>Jam Makan Malam</span>
               </label>
               <Input
                 id="time-dinner"
                 type="time"
                 value={dinnerTime}
                 onChange={(e) => setDinnerTime(e.target.value)}
+                className="h-9 w-28 text-center text-sm font-semibold tabular-nums rounded-lg bg-background"
               />
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowRight,
   Bell,
   KeyRound,
   LogOut,
@@ -42,9 +43,12 @@ interface ProfileSummary {
     bmrKcal: number;
     tdeeKcal: number;
     targetDailyCalories: number;
-    targetProteinG: number;
-    targetCarbsG: number;
-    targetFatG: number;
+    targetDailyProteinG?: number;
+    targetProteinG?: number;
+    targetDailyCarbsG?: number;
+    targetCarbsG?: number;
+    targetDailyFatG?: number;
+    targetFatG?: number;
   } | null;
 }
 
@@ -169,10 +173,16 @@ export default function SettingsPage() {
               {/* Grid Metrik Tubuh & Target */}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <div className="rounded-xl border border-border bg-secondary/30 p-3">
-                  <p className="text-[11px] text-muted-foreground">Berat Sekarang → Target</p>
-                  <p className="mt-1 text-sm font-semibold tabular-nums text-foreground">
-                    {formatKg(profile.currentWeightKg)} → {formatKg(profile.targetWeightKg)}
-                  </p>
+                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <span>Berat Sekarang</span>
+                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                    <span>Target</span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums text-foreground">
+                    <span>{formatKg(profile.currentWeightKg)}</span>
+                    <ArrowRight className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span>{formatKg(profile.targetWeightKg)}</span>
+                  </div>
                 </div>
 
                 <div className="rounded-xl border border-border bg-secondary/30 p-3">
@@ -185,14 +195,15 @@ export default function SettingsPage() {
                 <div className="rounded-xl border border-border bg-secondary/30 p-3">
                   <p className="text-[11px] text-muted-foreground">Target Protein</p>
                   <p className="mt-1 text-sm font-semibold tabular-nums text-foreground">
-                    {profile.targetProteinG} g/hari
+                    {profile.targetDailyProteinG ?? profile.targetProteinG ?? 0} g/hari
                   </p>
                 </div>
 
                 <div className="rounded-xl border border-border bg-secondary/30 p-3">
                   <p className="text-[11px] text-muted-foreground">Karbo / Lemak</p>
                   <p className="mt-1 text-sm font-semibold tabular-nums text-muted-foreground">
-                    {profile.targetCarbsG}g / {profile.targetFatG}g
+                    {profile.targetDailyCarbsG ?? profile.targetCarbsG ?? 0}g /{" "}
+                    {profile.targetDailyFatG ?? profile.targetFatG ?? 0}g
                   </p>
                 </div>
               </div>

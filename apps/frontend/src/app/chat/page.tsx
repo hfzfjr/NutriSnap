@@ -254,17 +254,39 @@ export default function AiDietCoachChatPage() {
           {/* Scrollable messages container */}
           <div className="space-y-3.5 max-h-[420px] min-h-[280px] overflow-y-auto pr-1">
             {messages.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border p-6 text-center space-y-2 my-6">
-                <div className="flex h-10 w-10 mx-auto items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <BotMessageSquare className="h-5 w-5" />
+              !context?.hasApiKey ? (
+                <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-6 text-center space-y-3 my-4">
+                  <div className="flex h-10 w-10 mx-auto items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <KeyRound className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      Tambahkan API Key Gemini Terlebih Dahulu
+                    </p>
+                    <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+                      Untuk mulai berkonsultasi secara langsung dengan Coach AI, silakan tambahkan Kunci Google Gemini API gratis kamu di menu Pengaturan. Coach AI akan menganalisis sisa kalori, target makro, dan preferensi makananmu secara personal.
+                    </p>
+                  </div>
+                  <Link href="/settings#api-key" className="inline-block pt-1">
+                    <Button size="sm" className="gap-1.5 text-xs">
+                      <KeyRound className="h-3.5 w-3.5" />
+                      Pasang Kunci API di Pengaturan
+                    </Button>
+                  </Link>
                 </div>
-                <p className="text-sm font-semibold text-foreground">
-                  Mulai Konsultasi dengan Coach AI
-                </p>
-                <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                  Tanyakan rekomendasi porsi makan malam, ide camilan tinggi protein, atau strategi surplus dan defisit yang tepat untuk target tubuh kamu.
-                </p>
-              </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-border p-6 text-center space-y-2 my-6">
+                  <div className="flex h-10 w-10 mx-auto items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <BotMessageSquare className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Mulai Konsultasi dengan Coach AI
+                  </p>
+                  <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                    Tanyakan rekomendasi porsi makan malam, ide camilan tinggi protein, atau strategi surplus dan defisit yang tepat untuk target tubuh kamu.
+                  </p>
+                </div>
+              )
             ) : (
               messages.map((msg) => (
                 <div
@@ -326,7 +348,7 @@ export default function AiDietCoachChatPage() {
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Tanyakan rekomendasi makan, sisa makro, atau resep..."
               disabled={isSending}
-              className="text-xs"
+              className="h-11 text-base md:text-sm"
             />
             <Button
               type="submit"

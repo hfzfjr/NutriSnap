@@ -3,24 +3,24 @@ import webpush from "web-push";
 import { env } from "../config/env.js";
 import { repository } from "../db/repository.js";
 
+export const DEFAULT_VAPID_PUBLIC_KEY =
+  "BCHJc_YMqf9ypdNJK46fLtv4rJU9W1GfgPz83YWgZZnr-88O_wZ2P-7__ULI_fdhZasOxHSuf6bV9xDoupyb5TY";
+export const DEFAULT_VAPID_PRIVATE_KEY =
+  "yJuuUEOIacBT_q5RJYdYbll7tL4qVRJ1ANOPtaR2dtM";
+
 let vapidConfigured = false;
 
-function ensureVapidConfigured(): boolean {
+export function ensureVapidConfigured(): boolean {
   if (vapidConfigured) return true;
-  if (env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
-    try {
-      webpush.setVapidDetails(
-        env.VAPID_SUBJECT,
-        env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-        env.VAPID_PRIVATE_KEY
-      );
-      vapidConfigured = true;
-      return true;
-    } catch {
-      return false;
-    }
+  const pubKey = env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY;
+  const privKey = env.VAPID_PRIVATE_KEY || DEFAULT_VAPID_PRIVATE_KEY;
+  try {
+    webpush.setVapidDetails(env.VAPID_SUBJECT, pubKey, privKey);
+    vapidConfigured = true;
+    return true;
+  } catch {
+    return false;
   }
-  return false;
 }
 
 export interface UnloggedMealReminderResult {

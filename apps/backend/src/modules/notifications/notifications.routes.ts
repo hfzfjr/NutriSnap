@@ -3,9 +3,14 @@ import {
   updatePushPreferencesSchema,
 } from "@nutrisnap/shared";
 import type { FastifyInstance } from "fastify";
+import webpush from "web-push";
 import { env } from "../../config/env.js";
 import { repository } from "../../db/repository.js";
-import { evaluateAndSendUnloggedMealReminders } from "../../jobs/meal-reminder.job.js";
+import {
+  DEFAULT_VAPID_PUBLIC_KEY,
+  ensureVapidConfigured,
+  evaluateAndSendUnloggedMealReminders,
+} from "../../jobs/meal-reminder.job.js";
 import { requireAuthenticatedUser } from "../auth/session.js";
 
 export async function registerNotificationRoutes(
@@ -16,9 +21,7 @@ export async function registerNotificationRoutes(
     return {
       success: true,
       data: {
-        publicKey:
-          env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ??
-          "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U",
+        publicKey: env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY,
       },
       meta: { timestamp: new Date().toISOString() },
     };
@@ -80,12 +83,48 @@ export async function registerNotificationRoutes(
     const user = await requireAuthenticatedUser(request, reply);
     if (!user) return;
 
+    const sub = await repository.getUserPushSubscription(user.id);
+    let testPushSent = false;
+    let pushError: string | null = null;
+
+    if (
+      sub &&
+      sub.endpoint &&
+      ensureVapidConfigured() &&
+      env.NODE_ENV !== "test"
+    ) {
+      try {
+        await webpush.sendNotification(
+          {
+            endpoint: sub.endpoint,
+            keys: {
+              p256dh: sub.p256dh,
+              auth: sub.auth,
+            },
+          },
+          JSON.stringify({
+            title: "Uji Notifikasi NutriSnap 🥗",
+            body: "Koneksi Web Push berhasil! Pengingat sarapan, makan siang, dan makan malam kamu siap aktif.",
+            url: "/dashboard",
+          })
+        );
+        testPushSent = true;
+      } catch (err) {
+        pushError = err instanceof Error ? err.message : String(err);
+      }
+    }
+
     const result = await evaluateAndSendUnloggedMealReminders();
     return {
       success: true,
       data: {
-        message: "Pengingat makan harian siap dikirim ke perangkat Anda!",
+        message: testPushSent
+          ? "Notifikasi pengujian berhasil dikirim ke perangkat kamu!"
+          : sub?.endpoint
+          ? `Status langganan aktif (${pushError || "menunggu pengiriman"})`
+          : "Belum ada langganan push aktif. Pastikan tombol 'Aktifkan Notifikasi Pengingat' sudah dinyalakan.",
         reminderEvaluation: result,
+        testPushSent,
       },
       meta: { timestamp: new Date().toISOString() },
     };

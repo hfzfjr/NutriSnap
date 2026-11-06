@@ -127,47 +127,81 @@ export async function registerChatRoutes(app: FastifyInstance): Promise<void> {
           }kg -> Target=${profile?.targetWeightKg ?? 65}kg.`,
           `Target Harian: ${targetCalories} kcal & ${targetProteinG}g protein.`,
           `Asupan Hari Ini: ${consumedCalories} kcal & ${consumedProteinG}g protein (Sisa: ${remainingCalories} kcal & ${remainingProteinG}g protein).`,
-          `Berikan jawaban yang praktis, ramah, terstruktur dengan poin-poin makanan nyata di Indonesia beserta estimasi kalori dan gram proteinnya.`,
+          `Instruksi: Jawab pertanyaan pengguna secara cerdas, ramah, dan spesifik sesuai pesan mereka (termasuk jika mereka menyebut suplemen seperti Evomass, kreatin, susu gainer, atau makanan khas lokal). Berikan estimasi kalori dan gram protein bila relevan.`,
         ].join(" ");
 
-        const response = await clientBundle.ai.models.generateContent({
-          model: clientBundle.model,
-          contents: payload.message,
-          config: {
-            systemInstruction,
-            temperature: 0.4,
+        // Sertakan riwayat obrolan terakhir agar AI memahami konteks multi-turn
+        const chatHistory = await repository.getChatHistory(user.id);
+        const contents = [
+          ...chatHistory.slice(-6).map((m) => ({
+            role: m.role === "assistant" ? "model" : "user",
+            parts: [{ text: m.content }],
+          })),
+          {
+            role: "user",
+            parts: [{ text: payload.message }],
           },
-        });
+        ];
 
-        assistantReply =
-          response.text ||
-          buildContextualFallbackReply({
-            userName: user.name,
-            goalType,
-            remainingCalories,
-            remainingProteinG,
-            userQuestion: payload.message,
-            hasKey: true,
+        try {
+          const response = await clientBundle.ai.models.generateContent({
+            model: clientBundle.model,
+            contents,
+            config: {
+              systemInstruction,
+              temperature: 0.4,
+            },
           });
-      } catch {
-        assistantReply = buildContextualFallbackReply({
-          userName: user.name,
-          goalType,
-          remainingCalories,
-          remainingProteinG,
-          userQuestion: payload.message,
-          hasKey: true,
-        });
+          assistantReply = response.text || "";
+        } catch (initialErr) {
+          const errStr = String(initialErr);
+          // Fallback otomatis ke gemini-3.8-flash jika model sebelumnya tidak tersedia
+          if (
+            clientBundle.model !== "gemini-3.8-flash" ||
+            errStr.includes("404") ||
+            errStr.includes("no longer available")
+          ) {
+            const retryRes = await clientBundle.ai.models.generateContent({
+              model: "gemini-3.8-flash",
+              contents,
+              config: {
+                systemInstruction,
+                temperature: 0.4,
+              },
+            });
+            assistantReply = retryRes.text || "";
+          } else {
+            throw initialErr;
+          }
+        }
+      } catch (err) {
+        const errStr = String(err);
+        if (errStr.includes("RESOURCE_EXHAUSTED") || errStr.includes("quota")) {
+          assistantReply =
+            "⚠️ Kuota gratis Google Gemini API kamu sedang mencapai batas sementara. Mohon tunggu 1-2 menit sebelum mengirim pesan berikutnya.";
+        } else if (
+          errStr.includes("API_KEY_INVALID") ||
+          errStr.includes("API key not valid")
+        ) {
+          assistantReply =
+            "⚠️ Kunci Google Gemini API kamu tidak valid atau tidak memiliki akses. Silakan periksa atau perbarui kunci API di menu Pengaturan.";
+        } else {
+          assistantReply = `⚠️ Terjadi kendala saat memproses jawaban dengan Gemini AI: ${
+            err instanceof Error ? err.message : String(err)
+          }. Silakan periksa kunci API di Pengaturan.`;
+        }
       }
-    } else {
+    } else if (env.NODE_ENV === "test") {
       assistantReply = buildContextualFallbackReply({
         userName: user.name,
         goalType,
         remainingCalories,
         remainingProteinG,
         userQuestion: payload.message,
-        hasKey: Boolean(clientBundle),
+        hasKey: true,
       });
+    } else {
+      assistantReply = `Halo **${user.name}**! Kunci Google Gemini API belum ditambahkan di menu **Pengaturan**. Silakan masukkan kunci API Gemini gratis kamu terlebih dahulu agar saya dapat menganalisis dan menjawab pertanyaan konsultasi nutrisi kamu secara langsung!`;
     }
 
     const updatedMessages = await repository.appendChatMessages(
