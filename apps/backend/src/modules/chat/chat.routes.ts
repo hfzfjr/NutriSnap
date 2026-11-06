@@ -143,52 +143,113 @@ export async function registerChatRoutes(app: FastifyInstance): Promise<void> {
           },
         ];
 
+        const callGeminiWithRetry = async (modelToUse: string): Promise<string> => {
+          let lastErr: unknown;
+          for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+              const res = await clientBundle.ai.models.generateContent({
+                model: modelToUse,
+                contents,
+                config: {
+                  systemInstruction,
+                  temperature: 0.4,
+                },
+              });
+              if (res.text) return res.text;
+            } catch (err) {
+              lastErr = err;
+              const errStr = String(err);
+              // Jika server Google overload (503 / high demand), tunggu 1.2 detik lalu coba lagi
+              if (
+                attempt < 2 &&
+                (errStr.includes("503") ||
+                  errStr.includes("high demand") ||
+                  errStr.includes("UNAVAILABLE"))
+              ) {
+                await new Promise((resolve) => setTimeout(resolve, 1200));
+                continue;
+              }
+              break;
+            }
+          }
+          throw lastErr;
+        };
+
         try {
-          const response = await clientBundle.ai.models.generateContent({
-            model: clientBundle.model,
-            contents,
-            config: {
-              systemInstruction,
-              temperature: 0.4,
-            },
-          });
-          assistantReply = response.text || "";
+          assistantReply = await callGeminiWithRetry(clientBundle.model);
         } catch (initialErr) {
           const errStr = String(initialErr);
-          // Fallback otomatis ke gemini-3.8-flash jika model sebelumnya tidak tersedia
+          // Fallback otomatis ke gemini-3.8-flash jika model sebelumnya tidak tersedia atau overload
           if (
-            clientBundle.model !== "gemini-3.8-flash" ||
-            errStr.includes("404") ||
-            errStr.includes("no longer available")
+            clientBundle.model !== "gemini-3.8-flash" &&
+            (errStr.includes("404") ||
+              errStr.includes("no longer available") ||
+              errStr.includes("503") ||
+              errStr.includes("UNAVAILABLE"))
           ) {
-            const retryRes = await clientBundle.ai.models.generateContent({
-              model: "gemini-3.8-flash",
-              contents,
-              config: {
-                systemInstruction,
-                temperature: 0.4,
-              },
-            });
-            assistantReply = retryRes.text || "";
+            assistantReply = await callGeminiWithRetry("gemini-3.8-flash");
           } else {
             throw initialErr;
           }
         }
       } catch (err) {
-        const errStr = String(err);
-        if (errStr.includes("RESOURCE_EXHAUSTED") || errStr.includes("quota")) {
+        const rawMsg = err instanceof Error ? err.message : String(err);
+        let cleanMsg = rawMsg;
+        let isHighDemand = false;
+        let isQuota = false;
+        let isKeyInvalid = false;
+
+        try {
+          const jsonStart = rawMsg.indexOf("{");
+          const jsonEnd = rawMsg.lastIndexOf("}");
+          if (jsonStart !== -1 && jsonEnd > jsonStart) {
+            const parsed = JSON.parse(rawMsg.substring(jsonStart, jsonEnd + 1)) as {
+              error?: { code?: number; message?: string; status?: string };
+              message?: string;
+              code?: number;
+            };
+            const inner = parsed.error || parsed;
+            const code = inner.code;
+            const status = (inner as { status?: string }).status;
+            const msg = inner.message || "";
+
+            if (code === 503 || status === "UNAVAILABLE" || msg.includes("high demand")) {
+              isHighDemand = true;
+            } else if (code === 429 || status === "RESOURCE_EXHAUSTED" || msg.includes("quota")) {
+              isQuota = true;
+            } else if (code === 403 || status === "PERMISSION_DENIED" || msg.includes("API key not valid")) {
+              isKeyInvalid = true;
+            }
+            cleanMsg = msg || rawMsg;
+          }
+        } catch {
+          // bukan JSON
+        }
+
+        if (
+          isHighDemand ||
+          rawMsg.includes("503") ||
+          rawMsg.includes("high demand") ||
+          rawMsg.includes("UNAVAILABLE")
+        ) {
+          assistantReply =
+            "⏳ Server Google Gemini AI saat ini sedang mengalami lonjakan antrean trafik yang tinggi (503 Service Unavailable). Lonjakan ini bersifat sementara dari pihak Google. Silakan kirim ulang pesan kamu dalam beberapa detik lagi.";
+        } else if (
+          isQuota ||
+          rawMsg.includes("RESOURCE_EXHAUSTED") ||
+          rawMsg.includes("quota")
+        ) {
           assistantReply =
             "⚠️ Kuota gratis Google Gemini API kamu sedang mencapai batas sementara. Mohon tunggu 1-2 menit sebelum mengirim pesan berikutnya.";
         } else if (
-          errStr.includes("API_KEY_INVALID") ||
-          errStr.includes("API key not valid")
+          isKeyInvalid ||
+          rawMsg.includes("API_KEY_INVALID") ||
+          rawMsg.includes("API key not valid")
         ) {
           assistantReply =
-            "⚠️ Kunci Google Gemini API kamu tidak valid atau tidak memiliki akses. Silakan periksa atau perbarui kunci API di menu Pengaturan.";
+            "⚠️ Kunci Google Gemini API kamu tidak valid atau telah dinonaktifkan. Silakan periksa kembali kunci API di menu Pengaturan.";
         } else {
-          assistantReply = `⚠️ Terjadi kendala saat memproses jawaban dengan Gemini AI: ${
-            err instanceof Error ? err.message : String(err)
-          }. Silakan periksa kunci API di Pengaturan.`;
+          assistantReply = `⚠️ Terjadi kendala saat menghubungi Google Gemini AI: ${cleanMsg}. Silakan coba beberapa saat lagi.`;
         }
       }
     } else if (env.NODE_ENV === "test") {

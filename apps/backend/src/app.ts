@@ -84,6 +84,13 @@ export async function buildApp(): Promise<FastifyInstance> {
             ) {
               message =
                 "Batas kuota gratis Google Gemini API kamu telah tercapai sementara. Coba beberapa saat lagi.";
+            } else if (
+              innerMsg.includes("high demand") ||
+              innerMsg.includes("503") ||
+              innerMsg.includes("UNAVAILABLE")
+            ) {
+              message =
+                "Server Google Gemini AI sedang mengalami lonjakan trafik (503 Service Unavailable). Silakan coba lagi dalam beberapa detik.";
             } else {
               message = `Layanan AI: ${innerMsg}`;
             }

@@ -120,6 +120,19 @@ export function humanizeGeminiError(error: unknown): Error {
         e.code = "GEMINI_RATE_LIMIT";
         return e;
       }
+      if (
+        code === 503 ||
+        status === "UNAVAILABLE" ||
+        msg.includes("high demand") ||
+        msg.includes("currently experiencing high demand")
+      ) {
+        const e = new Error(
+          "Server Google Gemini sedang mengalami lonjakan beban trafik (503 Service Unavailable). Silakan coba pindai kembali dalam beberapa detik."
+        ) as Error & { statusCode?: number; code?: string };
+        e.statusCode = 503;
+        e.code = "GEMINI_HIGH_DEMAND";
+        return e;
+      }
       if (code === 400 || status === "INVALID_ARGUMENT") {
         const e = new Error(
           "Format foto makanan tidak dapat dianalisis oleh AI. Pastikan foto jelas dan cukup terang."
